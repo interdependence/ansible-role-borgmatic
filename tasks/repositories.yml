@@ -1,0 +1,15 @@
+# Ensure repositories exist
+
+---
+
+- name: Ensure repositories exist
+  ansible.builtin.command: >
+    borgmatic init
+      --verbosity 1
+      --config {{ item.path }}
+      --encryption {{ item.encryption | mandatory }}
+      {% if item.storage_quota is defined %}--storage-quota {{ item.storage_quota }}{% endif %}
+      --override storage.ssh_command='ssh -o BatchMode=yes'
+  loop: '{{ borgmatic_present_configs }}'
+  changed_when: '"Initializing repository at" in borgmatic_init.stderr'
+  register: borgmatic_init

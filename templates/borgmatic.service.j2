@@ -1,0 +1,15 @@
+[Unit]
+Description=borgmatic backup service for {{ item.name }}
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Restart=no
+LogRateLimitIntervalSec=0
+ExecStartPre=sleep {{ item.schedule.backup.delay | default('1m') }}
+ExecStart=systemd-inhibit --who="borgmatic" --why="Prevent interrupting scheduled backup" \
+    borgmatic {% if item.schedule.check is defined %}prune compact create{% endif %} \
+    --verbosity -1 \
+    --syslog-verbosity 1 \
+    --config {{ item.path }}

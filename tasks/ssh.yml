@@ -1,0 +1,84 @@
+# Ensure SSH connection is configured with remote repositories
+
+---
+
+- name: Ensure public keys for remote repositories are registered in known_hosts
+  ansible.builtin.known_hosts:
+    name: '{{ item.split()[0] }}'
+    key: '{{ item }}'
+    state: present
+  loop: '{{ borgmatic_remote_public_keys }}'
+
+- name: Retrieve remote authorized_keys files
+  ansible.builtin.command:
+    cmd: >
+      ssh {{ borgmatic_control_ssh_options | join(" ") }} {{ item.1.split(":")[0] }}
+      tail -n 100 .ssh/authorized_keys
+  # Only check when repository is remote (i.e. of pattern user@remote:/path/to/repository)
+  when: '"@" in item.1'
+  # Loop over each repository subelement from all present borgmatic configs
+  loop: >
+    {{ borgmatic_configs |
+      json_query('[*].{
+        state: state,
+        append_only: append_only,
+        storage_quota: storage_quota,
+        remote_path: config.location.remote_path,
+        repositories: config.location.repositories}'
+      ) |
+      subelements("repositories")
+    }}
+  changed_when: false
+  become: false
+  delegate_to: localhost
+  # Registered result contains remote authorized_keys contents (in results.stdout_lines),
+  # the corresponding repository (in item.1), and other specified items (in item.0 dictionary)
+  register: authorized_keys
+
+- name: Ensure remote authorized_keys files are configured
+  ansible.builtin.shell:
+    cmd: >
+      echo -e {{ updated_authorized_keys }} |
+      ssh {{ borgmatic_control_ssh_options | join(" ") }} {{ remote }}
+      dd of=.ssh/authorized_keys
+  vars:
+    remote: '{{ item.repository.split(":")[0] }}'
+    repository: '{{ item.repository.split(":")[-1] }}'
+    # Expected entry
+    authorized_keys_entry: >-
+      command="{% if item.remote_path %}{{ item.remote_path }}{% else %}borg{% endif %} serve
+      {% if item.append_only %}--append-only {% endif -%}
+      {% if item.storage_quota %}--storage-quota {{ item.storage_quota }}{% endif -%}
+      --restrict-to-repository {{ repository }}",restrict
+      {{ user.ssh_public_key | from_yaml }}
+    # Remove any existing public key entries that claim this repository
+    cleaned_authorized_keys: '{{ item.authorized_keys | reject("search", repository) | list }}'
+    # Now add the expected entry back in
+    updated_authorized_keys: >-
+      {% if item.state is defined and item.state == 'absent' %}
+        '{{ cleaned_authorized_keys | join("\n") }}'
+      {%- else %}
+        '{{ (cleaned_authorized_keys + [authorized_keys_entry]) | join("\n") }}'
+      {%- endif %}
+  # Only modify when repository is remote (i.e. of pattern user@remote:/path/to/repository)
+  # and either state == present and missing, or state == absent and in nee of removal
+  when: >
+    '@' in item.repository and
+      item.state != 'absent' and
+      authorized_keys_entry not in item.authorized_keys or
+    '@' in item.repository and
+      item.state is defined and item.state == 'absent' and
+      authorized_keys_entry in item.authorized_keys
+  loop: >
+    {{ authorized_keys.results |
+      json_query('[*].{
+        repository: item[1],
+        state: item[0].state,
+        append_only: item[0].append_only,
+        storage_quota: item[0].storage_quota,
+        remote_path: item[0].remote_path,
+        authorized_keys: stdout_lines}'
+      )
+    }}
+  become: false
+  delegate_to: localhost

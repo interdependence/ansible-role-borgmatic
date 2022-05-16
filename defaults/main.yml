@@ -1,0 +1,12 @@
+# Default values for variables
+
+---
+
+borgmatic_configure_package: true
+borgmatic_configure_ssh: true
+borgmatic_configure_repositories: true
+borgmatic_configure_services: true
+borgmatic_perform_restore: false
+borgmatic_user: root
+borgmatic_remote_public_keys: []
+borgmatic_control_ssh_options: []

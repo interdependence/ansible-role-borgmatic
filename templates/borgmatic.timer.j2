@@ -1,0 +1,9 @@
+[Unit]
+Description=borgmatic backup timer for {{ item.name }}
+
+[Timer]
+OnCalendar={{ item.schedule.backup.oncalendar }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target

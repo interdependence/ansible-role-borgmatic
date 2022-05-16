@@ -1,0 +1,17 @@
+# Metadata
+
+---
+
+galaxy_info:
+  role_name: borgmatic
+  author: William Vandervalk
+  description: Configure automated borg backups using borgmatic, compatible with rsync.net
+  license: MIT
+  platforms:
+    - name: Fedora
+      versions:
+        - all
+  galaxy_tags:
+    - borg
+    - borgmatic
+    - backup

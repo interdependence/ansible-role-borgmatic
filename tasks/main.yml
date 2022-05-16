@@ -1,0 +1,76 @@
+# Ensure host is configured for automated borg backups using borgmatic
+
+---
+
+- name: Ensure borgmatic is installed
+  ansible.builtin.package:
+    name: borgmatic
+    state: present
+  become: true
+  when: borgmatic_configure_package
+
+- name: Ensure borgmatic user is configured
+  ansible.builtin.user:
+    name: '{{ borgmatic_user }}'
+    generate_ssh_key: true
+  become: true
+  register: user
+
+- name: Ensure borgmatic is configured
+  block:
+    - name: Ensure at least one borgmatic config is defined
+      ansible.builtin.assert:
+        that: 'borgmatic_configs[0].{{ item }} is defined'
+        fail_msg: Must specify at least one borgmatic config
+        quiet: true
+      loop:
+        - name
+        - path
+        - config
+      
+    - name: Set absent borgmatic configs
+      ansible.builtin.set_fact:
+        borgmatic_absent_configs: '{{ borgmatic_configs | json_query("[?state==`absent`]") }}'
+
+    - name: Ensure absent borgmatic configuration files are removed
+      ansible.builtin.file:
+        path: '{{ item.path }}'
+        state: absent
+      no_log: true
+      loop: '{{ borgmatic_absent_configs }}'
+
+    - name: Set present borgmatic configs
+      ansible.builtin.set_fact:
+        borgmatic_present_configs: '{{ borgmatic_configs | difference(borgmatic_absent_configs) }}'
+
+    - name: Ensure borgmatic configuration paths exist
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: directory
+        owner: '{{ user.name }}'
+        group: '{{ user.name }}'
+        mode: 0700
+      loop: '{{ borgmatic_present_configs | json_query("[*].path") | map("dirname") | unique }}'
+
+    - name: Ensure borgmatic configuration files are populated
+      ansible.builtin.copy:
+        content: '{{ item.config | to_nice_yaml(width=1000, sort_keys=false) }}'
+        dest: '{{ item.path }}'
+        owner: '{{ user.name }}'
+        group: '{{ user.name }}'
+        mode: 0600
+      no_log: true
+      loop: '{{ borgmatic_present_configs }}'
+
+    - include_tasks: ssh.yml
+      when: borgmatic_configure_ssh
+
+    - include_tasks: repositories.yml
+      when: borgmatic_configure_repositories
+
+    - include_tasks: restore.yml
+      when: borgmatic_perform_restore
+
+    - include_tasks: services.yml
+      when: borgmatic_configure_services
+  become_user: '{{ user.name }}'
