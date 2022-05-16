@@ -6,21 +6,21 @@
   ansible.builtin.set_fact:
     borgmatic_systemd_path: /etc/systemd/system
     borgmatic_systemd_scope: system
-  when: user.name == 'root'
+  when: borgmatic_user_facts.name == 'root'
 
 - name: Set sytemd path and scope if not running as root
   ansible.builtin.set_fact:
     borgmatic_systemd_path: '{{ user.home }}/.config/systemd/user'
     borgmatic_systemd_scope: user
-  when: user.name != 'root'
+  when: borgmatic_user_facts.name != 'root'
 
 # Backup services
 - name: Ensure systemd service files are configured for backups
   ansible.builtin.template:
     src: borgmatic.service.j2
     dest: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
-    owner: '{{ user.name }}'
-    group: '{{ user.name }}'
+    owner: '{{ borgmatic_user_facts.name }}'
+    group: '{{ borgmatic_user_facts.group }}'
     mode: 0644
   no_log: true
   when: item.schedule.backup.oncalendar is defined
@@ -30,8 +30,8 @@
   ansible.builtin.template:
     src: borgmatic.timer.j2
     dest: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.timer'
-    owner: '{{ user.name }}'
-    group: '{{ user.name }}'
+    owner: '{{ borgmatic_user_facts.name }}'
+    group: '{{ borgmatic_user_facts.group }}'
     mode: 0644
   no_log: true
   when: item.schedule.backup.oncalendar is defined
@@ -53,8 +53,8 @@
   ansible.builtin.template:
     src: borgmatic-check.service.j2
     dest: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.service'
-    owner: '{{ user.name }}'
-    group: '{{ user.name }}'
+    owner: '{{ borgmatic_user_facts.name }}'
+    group: '{{ borgmatic_user_facts.group }}'
     mode: 0644
   no_log: true
   when: item.schedule.check.oncalendar is defined
@@ -64,8 +64,8 @@
   ansible.builtin.template:
     src: borgmatic-check.timer.j2
     dest: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.timer'
-    owner: '{{ user.name }}'
-    group: '{{ user.name }}'
+    owner: '{{ borgmatic_user_facts.name }}'
+    group: '{{ borgmatic_user_facts.group }}'
     mode: 0644
   no_log: true
   when: item.schedule.check.oncalendar is defined

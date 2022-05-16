@@ -17,43 +17,36 @@ If using [rsync.net], once the corresponding public key has been manually added 
 <th>Variable</th>
 <th>Default</th>
 <th>Example</th>
-<th>Notes</th>
 </tr>
 <tr>
 <td>borgmatic_configure_package</td>
 <td>true</td>
 <td>false</td>
-<td>Ensure the borgmatic package is installed</td>
 </tr>
 <tr>
 <td>borgmatic_configure_ssh</td>
 <td>true</td>
 <td>false</td>
-<td>Ensure key based authentication is configured with backup server</td>
 </tr>
 <tr>
 <td>borgmatic_configure_repositories</td>
 <td>true</td>
 <td>false</td>
-<td>Initialize repositories as defined in borgmatic_configs if they do not already exist (will ignore existing repositories)</td>
 </tr>
 <tr>
 <td>borgmatic_configure_services</td>
 <td>true</td>
 <td>false</td>
-<td>Ensure systemd services and timers for backups and checks are configured</td>
 </tr>
 <tr>
 <td>borgmatic_perform_restore</td>
 <td>false</td>
 <td>true</td>
-<td>Perform restoration of backup as defined in borgmatic_restore</td>
 </tr>
 <tr>
 <td>borgmatic_user</td>
 <td>root</td>
 <td>username</td>
-<td>User that runs borgmatic</td>
 </tr>
 <tr>
 <td>borgmatic_remote_public_keys</td>
@@ -68,7 +61,6 @@ borgmatic_remote_public_keys:
 ```
 
 </td>
-<td>Public keys belonging to backup server to pre-register in the known_hosts file</td>
 </tr>
 <tr>
 <td>borgmatic_control_ssh_options</td>
@@ -82,7 +74,6 @@ borgmatic_control_ssh_options:
 ```
 
 </td>
-<td>SSH command line options used by control node when installing keys</td>
 </tr>
 <tr>
 <td>borgmatic_restore</td>
@@ -92,9 +83,10 @@ borgmatic_control_ssh_options:
 ```yaml
 borgmatic_restore:
   # Repository to restore from
-  repository: user@example.com:/path/to/repository
+  repository: user@example.com:/path/to/repo
 
-  # Optionally specify the archive, defaults to 'latest'
+  # Optionally specify the archive,
+  # defaults to 'latest'
   archive: latest
 
   # Optionally specify a list of source paths 
@@ -109,7 +101,6 @@ borgmatic_restore:
 ```
 
 </td>
-<td>Arguments to use when executing a restoration</td>
 </tr>
 <tr>
 <td>borgmatic_configs</td>
@@ -121,11 +112,13 @@ borgmatic_configs:
   - name: remote
     path: /etc/borgmatic.d/remote.yaml
 
-    # If set to 'absent', specified configuration will be removed
-    # as well as remote access and any configured systemd services
+    # If set to 'absent', specified
+    # configuration will be removed,
+    # as well as remote access and 
+    # any configured systemd services
     state: present
 
-    # Optional, append only mode enforced server side
+    # Optional, set append only mode
     append_only: true
 
     # Optional, set storage quota
@@ -136,15 +129,19 @@ borgmatic_configs:
 
     # Optional
     schedule:
-      # Optional, create systemd service and timer for backups
+      # Optional, create systemd service
+      # and timer for backups
       backup:
         # Set systemd timer 'OnCalendar'
         oncalendar: daily
         # Optional, set start delay
         delay: 5m
 
-      # Optional, create separate systemd service and timer for consistency checks
-      # if not specified, checks are run immediately after backups
+      # Optional, create separate systemd
+      # service and timer for running
+      # consistency checks
+      # If not specified, checks are run
+      # immediately after backups
       check:
         # Set systemd timer 'OnCalendar'
         oncalendar: weekly
@@ -152,14 +149,14 @@ borgmatic_configs:
         delay: 1h
 
     # Content of borgmatic config file
-    # See https://torsion.org/borgmatic/docs/reference/configuration/
+    # See https://torsion.org/borgmatic/
     config:
       location:
         source_directories:
           - /home/username
 
         repositories:
-          - user@example.com:/path/to/repository
+          - user@example.com:/path/to/repo
 
         exclude_patterns:
           - /home/username/.cache
@@ -167,7 +164,7 @@ borgmatic_configs:
         # rsync.net requires borg1
         remote_path: borg1
       storage:
-        encryption_passphrase: secretpassphrase
+        encryption_passphrase: redacted
 
       retention:
         keep_hourly: 24
@@ -180,17 +177,60 @@ borgmatic_configs:
         checks:
           - repository
           - archives
-
-      hooks:
-        healthchecks: https://hc-ping.com/your-uuid-here
 ```
 
 </td>
-<td>Multiple configurations can be specified as separate list items</td>
 </tr>
 </table>
 
 ### Notes
+
+<table>
+<tr>
+<th>Variable</th>
+<th>Notes</th>
+</tr>
+<tr>
+<td>borgmatic_configure_package</td>
+<td>Ensure the borgmatic package is installed</td>
+</tr>
+<tr>
+<td>borgmatic_configure_ssh</td>
+<td>Ensure key based authentication is configured with backup server</td>
+</tr>
+<tr>
+<td>borgmatic_configure_repositories</td>
+<td>Initialize repositories as defined in borgmatic_configs if they do not already exist (will ignore existing repositories)</td>
+</tr>
+<tr>
+<td>borgmatic_configure_services</td>
+<td>Ensure systemd services and timers for backups and checks are configured</td>
+</tr>
+<tr>
+<td>borgmatic_perform_restore</td>
+<td>Perform restoration of backup as defined in borgmatic_restore</td>
+</tr>
+<tr>
+<td>borgmatic_user</td>
+<td>User that runs borgmatic</td>
+</tr>
+<tr>
+<td>borgmatic_remote_public_keys</td>
+<td>Public keys belonging to backup server to pre-register in the known_hosts file</td>
+</tr>
+<tr>
+<td>borgmatic_control_ssh_options</td>
+<td>SSH command line options used by control node when installing keys</td>
+</tr>
+<tr>
+<td>borgmatic_restore</td>
+<td>Arguments to use when executing a restoration</td>
+</tr>
+<tr>
+<td>borgmatic_configs</td>
+<td>Multiple configurations can be specified as separate list items</td>
+</tr>
+</table>
 
 If a backup schedule is set for a config, but no check schedule is set, consistency checks will be performed alongside backups. To save time and resources, set a check schedule and checks will only run on that schedule.
 
@@ -205,12 +245,14 @@ To restore a previous backup, set `borgmatic_restore` with restoration details:
 ```yaml
 borgmatic_restore:
   # Repository to restore from
-  repository: user@example.com:/path/to/repository
+  repository: user@example.com:/path/to/repo
 
-  # Optionally specify the archive, defaults to 'latest'
+  # Optionally specify the archive,
+  # defaults to 'latest'
   archive: latest
 
-  # Optionally specify a list of source paths from within the archive to restore
+  # Optionally specify a list of source paths 
+  # from within the archive to restore
   # defaults to entire archive
   paths:
     - /home/username
@@ -266,7 +308,7 @@ This is a starting point for a typical Linux workstation:
 ---
 
 borgmatic_restore:
-  repository: user@example.com:/path/to/repository
+  repository: user@example.com:/path/to/repo
   destination: '/'
 
 borgmatic_configs:
@@ -289,7 +331,7 @@ borgmatic_configs:
           - /home/username
 
         repositories:
-          - user@example.com:/path/to/repository
+          - user@example.com:/path/to/repo
 
         exclude_patterns:
           - /home/username/.cache

@@ -50,7 +50,7 @@
       {% if item.append_only %}--append-only {% endif -%}
       {% if item.storage_quota %}--storage-quota {{ item.storage_quota }}{% endif -%}
       --restrict-to-repository {{ repository }}",restrict
-      {{ user.ssh_public_key | from_yaml }}
+      {{ borgmatic_user_facts.ssh_public_key | from_yaml }}
     # Remove any existing public key entries that claim this repository
     cleaned_authorized_keys: '{{ item.authorized_keys | reject("search", repository) | list }}'
     # Now add the expected entry back in
@@ -61,7 +61,7 @@
         '{{ (cleaned_authorized_keys + [authorized_keys_entry]) | join("\n") }}'
       {%- endif %}
   # Only modify when repository is remote (i.e. of pattern user@remote:/path/to/repository)
-  # and either state == present and missing, or state == absent and in nee of removal
+  # and either state == present and missing, or state == absent and in need of removal
   when: >
     '@' in item.repository and
       item.state != 'absent' and

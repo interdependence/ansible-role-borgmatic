@@ -14,7 +14,7 @@
     name: '{{ borgmatic_user }}'
     generate_ssh_key: true
   become: true
-  register: user
+  register: borgmatic_user_facts
 
 - name: Ensure borgmatic is configured
   block:
@@ -47,8 +47,8 @@
       ansible.builtin.file:
         path: '{{ item }}'
         state: directory
-        owner: '{{ user.name }}'
-        group: '{{ user.name }}'
+        owner: '{{ borgmatic_user_facts.name }}'
+        group: '{{ borgmatic_user_facts.group }}'
         mode: 0700
       loop: '{{ borgmatic_present_configs | json_query("[*].path") | map("dirname") | unique }}'
 
@@ -56,8 +56,8 @@
       ansible.builtin.copy:
         content: '{{ item.config | to_nice_yaml(width=1000, sort_keys=false) }}'
         dest: '{{ item.path }}'
-        owner: '{{ user.name }}'
-        group: '{{ user.name }}'
+        owner: '{{ borgmatic_user_facts.name }}'
+        group: '{{ borgmatic_user_facts.group }}'
         mode: 0600
       no_log: true
       loop: '{{ borgmatic_present_configs }}'
@@ -73,4 +73,4 @@
 
     - include_tasks: services.yml
       when: borgmatic_configure_services
-  become_user: '{{ user.name }}'
+  become_user: '{{ borgmatic_user_facts.name }}'
