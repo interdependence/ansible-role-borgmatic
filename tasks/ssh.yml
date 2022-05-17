@@ -44,15 +44,16 @@
   vars:
     remote: '{{ item.repository.split(":")[0] }}'
     repository: '{{ item.repository.split(":")[-1] }}'
+    public_key: '{{ borgmatic_user_facts.ssh_public_key | from_yaml }}'
     # Expected entry
     authorized_keys_entry: >-
       command="{% if item.remote_path %}{{ item.remote_path }}{% else %}borg{% endif %} serve
       {% if item.append_only %}--append-only {% endif -%}
       {% if item.storage_quota %}--storage-quota {{ item.storage_quota }}{% endif -%}
       --restrict-to-repository {{ repository }}",restrict
-      {{ borgmatic_user_facts.ssh_public_key | from_yaml }}
-    # Remove any existing public key entries that claim this repository
-    cleaned_authorized_keys: '{{ item.authorized_keys | reject("search", repository) | list }}'
+      {{ public_key }}
+    # Remove any existing public key entries that claim this public key
+    cleaned_authorized_keys: '{{ item.authorized_keys | reject("search", public_key | regex_escape) | list }}'
     # Now add the expected entry back in
     updated_authorized_keys: >-
       {% if item.state is defined and item.state == 'absent' %}

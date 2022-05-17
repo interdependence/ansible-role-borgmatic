@@ -6,9 +6,9 @@ An ansible role to configure automated [borg] backups using [borgmatic], compati
 
 `jmespath` must be installed on the control node.
 
-Hosts are configured to connect to the remote backup server in a [repository-restricted] mode. If key based authentication is enforced, an unrestricted key must be used to perform management tasks on the remote backup server. In order to protect the remote repository in the event that the control node is compromised, this key should be passphrase protected.
+Hosts are configured to connect to remote backup servers using [repository-restricted] mode. If key based authentication is enforced, an unrestricted key must be used to perform management tasks on the remote backup servers. In order to protect remote repository integrity in the event that the control node is compromised, this key should be passphrase protected.
 
-If using [rsync.net], once the corresponding public key has been manually added to the backup servers `authorized_keys` file, password authentication can be disabled through the [rsync.net web interface]. 
+If using [rsync.net], once the management public key has been manually added to the backup servers `authorized_keys` file, password authentication can be disabled through the [rsync.net web interface]. 
 
 ## Role Variables
 
@@ -110,24 +110,32 @@ borgmatic_restore:
 ```yaml
 borgmatic_configs:
   - name: remote
+
+    # Location of borgmatic config file
     path: /etc/borgmatic.d/remote.yaml
 
-    # If set to 'absent', specified
-    # configuration will be removed,
-    # as well as remote access and 
-    # any configured systemd services
+    # Optional, if set to 'absent',
+    # specified borgmatic config will be
+    # removed, as well as remote access
+    # and any related services and timers
+    # defaults to 'present'
     state: present
 
     # Optional, set append only mode
+    # defaults to false
     append_only: true
 
     # Optional, set storage quota
+    # defaults to no quota
     storage_quota: 500G
 
     # Needed for repository initialization
     encryption: repokey-blake2
 
-    # Optional
+    # Optional, if no schedule is set,
+    # borgmatic config will be installed,
+    # but no systemd services or timers
+    # will be created
     schedule:
       # Optional, create systemd service
       # and timer for backups
@@ -183,7 +191,7 @@ borgmatic_configs:
 </tr>
 </table>
 
-### Notes
+### Variable Notes
 
 <table>
 <tr>
@@ -196,15 +204,15 @@ borgmatic_configs:
 </tr>
 <tr>
 <td>borgmatic_configure_ssh</td>
-<td>Ensure key based authentication is configured with backup server</td>
+<td>Ensure key based authentication is configured with backup servers hosting remote repositories specified in borgmatic_configs</td>
 </tr>
 <tr>
 <td>borgmatic_configure_repositories</td>
-<td>Initialize repositories as defined in borgmatic_configs if they do not already exist (will ignore existing repositories)</td>
+<td>Initialize repositories specified in borgmatic_configs if they do not already exist</td>
 </tr>
 <tr>
 <td>borgmatic_configure_services</td>
-<td>Ensure systemd services and timers for backups and checks are configured</td>
+<td>Ensure systemd services and timers for backups and checks specified in borgmatic_configs are configured</td>
 </tr>
 <tr>
 <td>borgmatic_perform_restore</td>
@@ -216,7 +224,7 @@ borgmatic_configs:
 </tr>
 <tr>
 <td>borgmatic_remote_public_keys</td>
-<td>Public keys belonging to backup server to pre-register in the known_hosts file</td>
+<td>Public keys belonging to backup servers to register in the known_hosts file</td>
 </tr>
 <tr>
 <td>borgmatic_control_ssh_options</td>
@@ -232,7 +240,8 @@ borgmatic_configs:
 </tr>
 </table>
 
-If a backup schedule is set for a config, but no check schedule is set, consistency checks will be performed alongside backups. To save time and resources, set a check schedule and checks will only run on that schedule.
+<!-- If a backup schedule is set for a config, but no check schedule is set, consistency checks will be performed alongside backups. To save time and resources, an independent check schedule can be set. -->
+If an independent `check` schedule is set, consistency checking will be decoupled from backups, otherwise checks are run subsequent to each backup, which can take quite a while for a large repository.
 
 Append only mode is enforced server side, and not set at repository initialization. This allows for periodic manual pruning to save space while protecting remote integrity.
 
@@ -358,6 +367,7 @@ borgmatic_configs:
 
   # Typical setup for occasional backups to a removable drive
   # Note that since no schedule is specified, this config will not run automatically
+  # Repository initialization will fail if the removable drive is not mounted
   - name: local
     path: /etc/borgmatic.d/local.yaml
     encryption: authenticated-blake2
