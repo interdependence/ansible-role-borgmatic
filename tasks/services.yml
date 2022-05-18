@@ -86,21 +86,14 @@
 - name: Retrieve service facts
   ansible.builtin.service_facts:
 
-- name: Ensure absent backup services are removed
-  ansible.builtin.file:
-    path: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
-    state: absent
-  no_log: true
-  loop: '{{ borgmatic_absent_configs }}'
-
 - name: Ensure absent backup timers are disabled
   ansible.builtin.systemd:
-    name: '{{ service_name }}'
+    name: 'borgmatic-{{ item.name }}.timer'
     scope: '{{ borgmatic_systemd_scope }}'
     state: stopped
     enabled: false
   vars:
-    service_name: 'borgmatic-{{ item.name }}.timer'
+    service_name: 'borgmatic-{{ item.name }}.service'
   no_log: true
   when: service_name in ansible_facts.services
   loop: '{{ borgmatic_absent_configs }}'
@@ -112,14 +105,21 @@
   no_log: true
   loop: '{{ borgmatic_absent_configs }}'
 
+- name: Ensure absent backup services are removed
+  ansible.builtin.file:
+    path: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
+    state: absent
+  no_log: true
+  loop: '{{ borgmatic_absent_configs }}'
+
 - name: Ensure absent check timers are disabled
   ansible.builtin.systemd:
-    name: '{{ service_name }}'
+    name: 'borgmatic-check-{{ item.name }}.timer'
     scope: '{{ borgmatic_systemd_scope }}'
     state: stopped
     enabled: false
   vars:
-    service_name: 'borgmatic-check-{{ item.name }}.timer'
+    service_name: 'borgmatic-check-{{ item.name }}.service'
   no_log: true
   when: service_name in ansible_facts.services
   loop: '{{ borgmatic_absent_configs }}'
@@ -127,6 +127,13 @@
 - name: Ensure absent check timers are removed
   ansible.builtin.file:
     path: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.timer'
+    state: absent
+  no_log: true
+  loop: '{{ borgmatic_absent_configs }}'
+
+- name: Ensure absent check services are removed
+  ansible.builtin.file:
+    path: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.service'
     state: absent
   no_log: true
   loop: '{{ borgmatic_absent_configs }}'

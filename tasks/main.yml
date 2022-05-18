@@ -18,7 +18,7 @@
 
 - name: Ensure borgmatic is configured
   block:
-    - name: Ensure at least one borgmatic config is defined
+    - name: Ensure at least one borgmatic config is set
       ansible.builtin.assert:
         that: 'borgmatic_configs[0].{{ item }} is defined'
         fail_msg: Must specify at least one borgmatic config

@@ -4,8 +4,6 @@ An ansible role to configure automated [borg] backups using [borgmatic], compati
 
 ## Requirements
 
-`jmespath` must be installed on the control node.
-
 Hosts are configured to connect to remote backup servers using [repository-restricted] mode. If key based authentication is enforced, an unrestricted key must be used to perform management tasks on the remote backup servers. In order to protect remote repository integrity in the event that the control node is compromised, this key should be passphrase protected.
 
 If using [rsync.net], once the management public key has been manually added to the backup servers `authorized_keys` file, password authentication can be disabled through the [rsync.net web interface]. 
