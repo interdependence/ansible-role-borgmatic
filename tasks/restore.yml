@@ -5,7 +5,7 @@
 - name: Ensure borgmatic restore is defined
   ansible.builtin.assert:
     that: 'borgmatic_restore.{{ item }} is defined'
-    fail_msg: Must specify borgmatic restore {{ item }}
+    fail_msg: 'Must specify borgmatic restore {{ item }}'
     quiet: true
   loop:
     - repository
