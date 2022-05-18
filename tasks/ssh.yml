@@ -27,7 +27,7 @@
 - name: Retrieve remote authorized_keys files from each remote server
   ansible.builtin.command:
     cmd: >
-      ssh {{ borgmatic_control_ssh_options | join(' ') }} {{ item }}
+      ssh {{ borgmatic_local_ssh_options | join(' ') }} {{ item }}
       tail -n 100 .ssh/authorized_keys
   loop: '{{ borgmatic_remotes }}'
   changed_when: false
@@ -39,7 +39,7 @@
   ansible.builtin.shell:
     cmd: >
       echo -e '{{ correct_authorized_keys | join("\n") }}' |
-      ssh {{ borgmatic_control_ssh_options | join(' ') }} {{ item }}
+      ssh {{ borgmatic_local_ssh_options | join(' ') }} {{ item }}
       dd of=.ssh/authorized_keys
   vars:
     # Retrieve list of repositories with state: 'present' on this remote
@@ -59,8 +59,7 @@
     options: >-
       {{ 
         borgmatic_remote_options | selectattr('remote', 'eq', item) | first 
-        if borgmatic_remote_options is defined and
-        borgmatic_remote_options | selectattr('remote', 'eq', item)
+        if borgmatic_remote_options | selectattr('remote', 'eq', item)
       }}
     remote_path: '{{ options.remote_path | default("borg") }}'
     append_only: '{{ options.append_only | default(false) }}'
