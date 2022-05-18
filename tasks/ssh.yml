@@ -24,10 +24,6 @@
         unique
       }}
 
-- name: debug
-  debug:
-    var: borgmatic_remotes
-
 - name: Retrieve remote authorized_keys files from each remote server
   ansible.builtin.command:
     cmd: >
