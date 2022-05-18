@@ -17,12 +17,16 @@
         map(attribute='config') |
         map(attribute='location') |
         map(attribute='repositories') |
-        select('match', '^(.*)@(.*)$') |
         flatten |
+        select('match', '^(.*)@(.*)$') |
         map('split', ':') |
         map('first') |
         unique
       }}
+
+- name: debug
+  debug:
+    var: borgmatic_remotes
 
 - name: Retrieve remote authorized_keys files from each remote server
   ansible.builtin.command:
@@ -49,8 +53,8 @@
         map(attribute='config') |
         map(attribute='location') |
         map(attribute='repositories') |
-        select('search', item) |
         flatten |
+        select('search', item) |
         map('split', ':') |
         map('last') |
         unique
