@@ -4,9 +4,9 @@ An ansible role to configure automated [borg] backups using [borgmatic], compati
 
 ## Requirements
 
-Hosts are configured to connect to remote backup servers using [repository-restricted] mode. If key based authentication is enforced, an unrestricted key must be used to perform management tasks on the remote backup servers. In order to protect remote repository integrity in the event that the control node is compromised, this key should be passphrase protected.
+If remote servers are configured in [repository-restricted] mode, and key based authentication is enforced, an unrestricted key must be used to perform management tasks on the remote backup servers. In order to protect remote repository integrity in the event that the control node is compromised, this key should be passphrase protected.
 
-If using [rsync.net], once the management public key has been manually added to the backup servers `authorized_keys` file, password authentication can be disabled through the [rsync.net web interface]. 
+Once the management public key has been manually added to the backup servers `authorized_keys` file, password authentication can be disabled. If using [rsync.net] this can be done through the [rsync.net web interface]. 
 
 ## Role Variables
 
@@ -61,14 +61,36 @@ borgmatic_remote_public_keys:
 </td>
 </tr>
 <tr>
-<td>borgmatic_control_ssh_options</td>
+<td>borgmatic_local_ssh_options</td>
 <td>[ ]</td>
 <td>
 
 ```yaml
-borgmatic_control_ssh_options:
+borgmatic_local_ssh_options:
   - '-p 22'
   - '-i ~/.ssh/id_rsa'
+```
+
+</td>
+</tr>
+<tr>
+<td>borgmatic_remote_options</td>
+<td>[ ]</td>
+<td>
+
+```yaml
+borgmatic_remote_options:
+  - remote: user@example.com
+    remote_path: borg1
+    append_only: true
+    storage_quota: 100G
+    restrict:
+      repositories:
+        - repo1
+        - repo2
+      paths:
+        - path1
+        - path2
 ```
 
 </td>
@@ -109,9 +131,6 @@ borgmatic_restore:
 borgmatic_configs:
   - name: remote
 
-    # Location of borgmatic config file
-    path: /etc/borgmatic.d/remote.yaml
-
     # Optional, if set to 'absent',
     # specified borgmatic config will be
     # removed, as well as remote access
@@ -119,13 +138,8 @@ borgmatic_configs:
     # defaults to 'present'
     state: present
 
-    # Optional, set append only mode
-    # defaults to false
-    append_only: true
-
-    # Optional, set storage quota
-    # defaults to no quota
-    storage_quota: 500G
+    # Location of borgmatic config file
+    path: /etc/borgmatic.d/remote.yaml
 
     # Needed for repository initialization
     encryption: repokey-blake2
@@ -225,8 +239,12 @@ borgmatic_configs:
 <td>Public keys belonging to backup servers to register in the known_hosts file</td>
 </tr>
 <tr>
-<td>borgmatic_control_ssh_options</td>
+<td>borgmatic_local_ssh_options</td>
 <td>SSH command line options used by control node when installing keys</td>
+</tr>
+<tr>
+<td>borgmatic_remote_options</td>
+<td>Server-side options applied to authorized_keys entries</td>
 </tr>
 <tr>
 <td>borgmatic_restore</td>
@@ -300,7 +318,7 @@ borgmatic_remote_public_keys:
   - example.com ssh-rsa AAAA...
   - example.com ecdsa-sha2-nistp256 AAAA...
 
-borgmatic_control_ssh_options:
+borgmatic_local_ssh_options:
   - '-p 22'
   - '-i ~/.ssh/id_rsa'
 ```
@@ -321,8 +339,9 @@ borgmatic_restore:
 borgmatic_configs:
   # Typical setup for daily backups to a remote server
   - name: remote
+    state: present
     path: /etc/borgmatic.d/remote.yaml
-    append_only: true
+    encryption: repokey-blake2
 
     schedule:
       backup:
@@ -367,6 +386,7 @@ borgmatic_configs:
   # Note that since no schedule is specified, this config will not run automatically
   # Repository initialization will fail if the removable drive is not mounted
   - name: local
+    state: present
     path: /etc/borgmatic.d/local.yaml
     encryption: authenticated-blake2
 

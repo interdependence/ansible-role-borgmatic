@@ -9,4 +9,4 @@ borgmatic_configure_services: true
 borgmatic_perform_restore: false
 borgmatic_user: root
 borgmatic_remote_public_keys: []
-borgmatic_control_ssh_options: []
+borgmatic_local_ssh_options: []

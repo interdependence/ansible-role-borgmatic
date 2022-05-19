@@ -8,6 +8,7 @@
     key: '{{ item }}'
     state: present
   loop: '{{ borgmatic_remote_public_keys }}'
+  become_user: '{{ borgmatic_user_facts.name }}'
 
 - name: Set list of remote servers
   ansible.builtin.set_fact:
@@ -27,7 +28,7 @@
 - name: Retrieve remote authorized_keys files from each remote server
   ansible.builtin.command:
     cmd: >
-      ssh {{ borgmatic_local_ssh_options | join(' ') }} {{ item }}
+      ssh {{ borgmatic_local_ssh_options }} {{ item }}
       tail -n 100 .ssh/authorized_keys
   loop: '{{ borgmatic_remotes }}'
   changed_when: false
@@ -39,7 +40,7 @@
   ansible.builtin.shell:
     cmd: >
       echo -e '{{ correct_authorized_keys | join("\n") }}' |
-      ssh {{ borgmatic_local_ssh_options | join(' ') }} {{ item }}
+      ssh {{ borgmatic_local_ssh_options }} {{ item }}
       dd of=.ssh/authorized_keys
   vars:
     # Retrieve list of repositories with state: 'present' on this remote

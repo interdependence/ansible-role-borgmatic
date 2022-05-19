@@ -12,3 +12,4 @@
     {% endif %}
     --destination {{ borgmatic_restore.destination | mandatory }}
   changed_when: true
+  become_user: '{{ borgmatic_user_facts.name }}'

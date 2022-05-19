@@ -14,126 +14,129 @@
     borgmatic_systemd_scope: user
   when: borgmatic_user_facts.name != 'root'
 
-# Backup services
-- name: Ensure systemd service files are configured for backups
-  ansible.builtin.template:
-    src: borgmatic.service.j2
-    dest: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
-    owner: '{{ borgmatic_user_facts.name }}'
-    group: '{{ borgmatic_user_facts.group }}'
-    mode: 0644
-  no_log: true
-  when: item.schedule.backup.oncalendar is defined
-  loop: '{{ borgmatic_present_configs }}'
-
-- name: Ensure systemd timer files are configured for backups
-  ansible.builtin.template:
-    src: borgmatic.timer.j2
-    dest: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.timer'
-    owner: '{{ borgmatic_user_facts.name }}'
-    group: '{{ borgmatic_user_facts.group }}'
-    mode: 0644
-  no_log: true
-  when: item.schedule.backup.oncalendar is defined
-  loop: '{{ borgmatic_present_configs }}'
-
-- name: Ensure systemd timers are enabled for backups
-  ansible.builtin.systemd:
-    name: 'borgmatic-{{ item.name }}.timer'
-    scope: '{{ borgmatic_systemd_scope }}'
-    daemon_reload: true
-    state: started
-    enabled: true
-  no_log: true
-  when: item.schedule.backup.oncalendar is defined
-  loop: '{{ borgmatic_present_configs }}'
-
-# Check services
-- name: Ensure systemd service files are configured for checks
-  ansible.builtin.template:
-    src: borgmatic-check.service.j2
-    dest: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.service'
-    owner: '{{ borgmatic_user_facts.name }}'
-    group: '{{ borgmatic_user_facts.group }}'
-    mode: 0644
-  no_log: true
-  when: item.schedule.check.oncalendar is defined
-  loop: '{{ borgmatic_present_configs }}'
-
-- name: Ensure systemd timer files are configured for checks
-  ansible.builtin.template:
-    src: borgmatic-check.timer.j2
-    dest: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.timer'
-    owner: '{{ borgmatic_user_facts.name }}'
-    group: '{{ borgmatic_user_facts.group }}'
-    mode: 0644
-  no_log: true
-  when: item.schedule.check.oncalendar is defined
-  loop: '{{ borgmatic_present_configs }}'
-
-- name: Ensure systemd timers are enabled for checks
-  ansible.builtin.systemd:
-    name: 'borgmatic-check-{{ item.name }}.timer'
-    scope: '{{ borgmatic_systemd_scope }}'
-    daemon_reload: true
-    state: started
-    enabled: true
-  no_log: true
-  when: item.schedule.check.oncalendar is defined
-  loop: '{{ borgmatic_present_configs }}'
-
-# Cleanup absent services
-- name: Retrieve service facts
-  ansible.builtin.service_facts:
-
-- name: Ensure absent backup timers are disabled
-  ansible.builtin.systemd:
-    name: 'borgmatic-{{ item.name }}.timer'
-    scope: '{{ borgmatic_systemd_scope }}'
-    state: stopped
-    enabled: false
-  vars:
-    service_name: 'borgmatic-{{ item.name }}.service'
-  no_log: true
-  when: service_name in ansible_facts.services
-  loop: '{{ borgmatic_absent_configs }}'
-
-- name: Ensure absent backup timers are removed
-  ansible.builtin.file:
-    path: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.timer'
-    state: absent
-  no_log: true
-  loop: '{{ borgmatic_absent_configs }}'
-
-- name: Ensure absent backup services are removed
-  ansible.builtin.file:
-    path: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
-    state: absent
-  no_log: true
-  loop: '{{ borgmatic_absent_configs }}'
-
-- name: Ensure absent check timers are disabled
-  ansible.builtin.systemd:
-    name: 'borgmatic-check-{{ item.name }}.timer'
-    scope: '{{ borgmatic_systemd_scope }}'
-    state: stopped
-    enabled: false
-  vars:
-    service_name: 'borgmatic-check-{{ item.name }}.service'
-  no_log: true
-  when: service_name in ansible_facts.services
-  loop: '{{ borgmatic_absent_configs }}'
-
-- name: Ensure absent check timers are removed
-  ansible.builtin.file:
-    path: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.timer'
-    state: absent
-  no_log: true
-  loop: '{{ borgmatic_absent_configs }}'
-
-- name: Ensure absent check services are removed
-  ansible.builtin.file:
-    path: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.service'
-    state: absent
-  no_log: true
-  loop: '{{ borgmatic_absent_configs }}'
+- name: Configure systemd services and timers
+  block:
+    # Backup services
+    - name: Ensure systemd service files are configured for backups
+      ansible.builtin.template:
+        src: borgmatic.service.j2
+        dest: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
+        owner: '{{ borgmatic_user_facts.name }}'
+        group: '{{ borgmatic_user_facts.group }}'
+        mode: 0644
+      no_log: true
+      when: item.schedule.backup.oncalendar is defined
+      loop: '{{ borgmatic_present_configs }}'
+    
+    - name: Ensure systemd timer files are configured for backups
+      ansible.builtin.template:
+        src: borgmatic.timer.j2
+        dest: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.timer'
+        owner: '{{ borgmatic_user_facts.name }}'
+        group: '{{ borgmatic_user_facts.group }}'
+        mode: 0644
+      no_log: true
+      when: item.schedule.backup.oncalendar is defined
+      loop: '{{ borgmatic_present_configs }}'
+    
+    - name: Ensure systemd timers are enabled for backups
+      ansible.builtin.systemd:
+        name: 'borgmatic-{{ item.name }}.timer'
+        scope: '{{ borgmatic_systemd_scope }}'
+        daemon_reload: true
+        state: started
+        enabled: true
+      no_log: true
+      when: item.schedule.backup.oncalendar is defined
+      loop: '{{ borgmatic_present_configs }}'
+    
+    # Check services
+    - name: Ensure systemd service files are configured for checks
+      ansible.builtin.template:
+        src: borgmatic-check.service.j2
+        dest: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.service'
+        owner: '{{ borgmatic_user_facts.name }}'
+        group: '{{ borgmatic_user_facts.group }}'
+        mode: 0644
+      no_log: true
+      when: item.schedule.check.oncalendar is defined
+      loop: '{{ borgmatic_present_configs }}'
+    
+    - name: Ensure systemd timer files are configured for checks
+      ansible.builtin.template:
+        src: borgmatic-check.timer.j2
+        dest: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.timer'
+        owner: '{{ borgmatic_user_facts.name }}'
+        group: '{{ borgmatic_user_facts.group }}'
+        mode: 0644
+      no_log: true
+      when: item.schedule.check.oncalendar is defined
+      loop: '{{ borgmatic_present_configs }}'
+    
+    - name: Ensure systemd timers are enabled for checks
+      ansible.builtin.systemd:
+        name: 'borgmatic-check-{{ item.name }}.timer'
+        scope: '{{ borgmatic_systemd_scope }}'
+        daemon_reload: true
+        state: started
+        enabled: true
+      no_log: true
+      when: item.schedule.check.oncalendar is defined
+      loop: '{{ borgmatic_present_configs }}'
+    
+    # Cleanup absent services
+    - name: Retrieve service facts
+      ansible.builtin.service_facts:
+    
+    - name: Ensure absent backup timers are disabled
+      ansible.builtin.systemd:
+        name: 'borgmatic-{{ item.name }}.timer'
+        scope: '{{ borgmatic_systemd_scope }}'
+        state: stopped
+        enabled: false
+      vars:
+        service_name: 'borgmatic-{{ item.name }}.service'
+      no_log: true
+      when: service_name in ansible_facts.services
+      loop: '{{ borgmatic_absent_configs }}'
+    
+    - name: Ensure absent backup timers are removed
+      ansible.builtin.file:
+        path: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.timer'
+        state: absent
+      no_log: true
+      loop: '{{ borgmatic_absent_configs }}'
+    
+    - name: Ensure absent backup services are removed
+      ansible.builtin.file:
+        path: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
+        state: absent
+      no_log: true
+      loop: '{{ borgmatic_absent_configs }}'
+    
+    - name: Ensure absent check timers are disabled
+      ansible.builtin.systemd:
+        name: 'borgmatic-check-{{ item.name }}.timer'
+        scope: '{{ borgmatic_systemd_scope }}'
+        state: stopped
+        enabled: false
+      vars:
+        service_name: 'borgmatic-check-{{ item.name }}.service'
+      no_log: true
+      when: service_name in ansible_facts.services
+      loop: '{{ borgmatic_absent_configs }}'
+    
+    - name: Ensure absent check timers are removed
+      ansible.builtin.file:
+        path: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.timer'
+        state: absent
+      no_log: true
+      loop: '{{ borgmatic_absent_configs }}'
+    
+    - name: Ensure absent check services are removed
+      ansible.builtin.file:
+        path: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.service'
+        state: absent
+      no_log: true
+      loop: '{{ borgmatic_absent_configs }}'
+  become_user: '{{ borgmatic_user_facts.name }}'

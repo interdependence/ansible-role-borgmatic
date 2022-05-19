@@ -9,7 +9,8 @@
       --config {{ item.path }}
       --encryption {{ item.encryption | mandatory }}
       --override storage.ssh_command='ssh -o BatchMode=yes'
-  loop: '{{ borgmatic_present_configs }}'
   no_log: true
+  become_user: '{{ borgmatic_user_facts.name }}'
   changed_when: '"Initializing repository at" in borgmatic_init.stderr'
   register: borgmatic_init
+  loop: '{{ borgmatic_present_configs }}'
