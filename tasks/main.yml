@@ -16,6 +16,18 @@
   become: true
   register: borgmatic_user_facts
 
+- name: Set sytemd path and scope if running as root
+  ansible.builtin.set_fact:
+    borgmatic_systemd_path: /etc/systemd/system
+    borgmatic_systemd_scope: system
+  when: borgmatic_user_facts.name == 'root'
+
+- name: Set sytemd path and scope if not running as root
+  ansible.builtin.set_fact:
+    borgmatic_systemd_path: '{{ borgmatic_user_facts.home }}/.config/systemd/user'
+    borgmatic_systemd_scope: user
+  when: borgmatic_user_facts.name != 'root'
+
 - include_tasks: config.yml
 
 - include_tasks: ssh.yml
@@ -26,6 +38,3 @@
 
 - include_tasks: restore.yml
   when: borgmatic_perform_restore
-
-- include_tasks: services.yml
-  when: borgmatic_configure_services
