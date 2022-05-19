@@ -1,7 +1,0 @@
-# Handlers
-
----
-
-- name: Configure services
-  include_tasks: services.yml
-  when: borgmatic_configure_services

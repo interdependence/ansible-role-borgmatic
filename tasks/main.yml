@@ -26,3 +26,6 @@
 
 - include_tasks: restore.yml
   when: borgmatic_perform_restore
+
+- include_tasks: services.yml
+  when: borgmatic_configure_services

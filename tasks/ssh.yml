@@ -60,7 +60,7 @@
     options: >-
       {{ 
         borgmatic_remote_options | selectattr('remote', 'eq', item) | first 
-        if borgmatic_remote_options | selectattr('remote', 'eq', item)
+        if borgmatic_remote_options is defined and borgmatic_remote_options | selectattr('remote', 'eq', item)
       }}
     remote_path: '{{ options.remote_path | default("borg") }}'
     append_only: '{{ options.append_only | default(false) }}'
