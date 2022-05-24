@@ -43,7 +43,7 @@ Once the privileged public key has been manually added to the remote backup serv
 </tr>
 <tr>
 <td>borgmatic_local_ssh_options</td>
-<td>" "</td>
+<td>' '</td>
 <td>
 
 ```yaml
@@ -90,7 +90,7 @@ borgmatic_remote_options:
 </tr>
 <tr>
 <td>borgmatic_configs</td>
-<td></td>
+<td>[ ]</td>
 <td>
 
 ```yaml
@@ -169,7 +169,7 @@ borgmatic_configs:
 </tr>
 <tr>
 <td>borgmatic_restore</td>
-<td>{ }</td>
+<td>[ ]</td>
 <td>
 
 ```yaml
