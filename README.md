@@ -4,9 +4,9 @@ An ansible role to configure automated [borg] backups using [borgmatic], compati
 
 ## Requirements
 
-If remote servers are configured in [repository-restricted] mode, and key based authentication is enforced, a privileged key on the control node must be used to perform management tasks on the remote backup servers. In order to protect remote repository integrity in the event that the control node is compromised, this key should be passphrase protected.
+If remote servers are configured in [repository-restricted] mode, and key based authentication is enforced, a privileged key on the control node must be used to perform management of the remote backup servers. In order to protect repository integrity in the event that the control node is compromised, this key should be passphrase protected.
 
-Once the privileged public key has been manually added to the backup servers `authorized_keys` file, password authentication can be disabled. For [rsync.net] this can be done through the [rsync.net web interface]. 
+Once the privileged public key has been manually added to the remote backup servers `authorized_keys` file, password authentication can be disabled. For [rsync.net] this can be done using the [rsync.net web interface]. 
 
 ## Role Variables
 
@@ -43,11 +43,11 @@ Once the privileged public key has been manually added to the backup servers `au
 </tr>
 <tr>
 <td>borgmatic_local_ssh_options</td>
-<td>[ ]</td>
+<td>" "</td>
 <td>
 
 ```yaml
-borgmatic_local_ssh_options: '-p 22 -i ~/.ssh/id_rsa'
+'-p 22 -i ~/.ssh/id_rsa'
 ```
 
 </td>
@@ -175,21 +175,21 @@ borgmatic_configs:
 ```yaml
 borgmatic_restore:
   # Repository to restore from
-  repository: user@example.com:/path/to/repo
+  - repository: user@example.com:/path/to/repo
 
-  # Optionally specify the archive,
-  # defaults to 'latest'
-  archive: latest
+    # Optionally specify the archive,
+    # defaults to 'latest'
+    archive: latest
 
-  # Optionally specify a list of source paths 
-  # from within the archive to restore
-  # defaults to entire archive
-  paths:
-    - /home/username
-    - /etc
+    # Optionally specify a list of source paths 
+    # from within the archive to restore
+    # defaults to entire archive
+    paths:
+      - /home/username
+      - /etc
 
-  # Destination that will be restored into
-  destination: '/'
+    # Destination that will be restored into
+    destination: '/'
 ```
 
 </td>
@@ -214,7 +214,7 @@ borgmatic_restore:
 </tr>
 <tr>
 <td>borgmatic_configure_ssh</td>
-<td>Ensure key based authentication is configured with backup servers hosting remote repositories specified in borgmatic_configs</td>
+<td>Ensure key based authentication is configured with remote backup servers hosting repositories specified in borgmatic_configs</td>
 </tr>
 <tr>
 <td>borgmatic_configure_repositories</td>
@@ -222,40 +222,41 @@ borgmatic_restore:
 </tr>
 <tr>
 <td>borgmatic_configure_services</td>
-<td>Ensure systemd services and timers for backups and checks specified in borgmatic_configs are configured</td>
-</tr>
-<tr>
-<td>borgmatic_perform_restore</td>
-<td>Perform restoration of backup as defined in borgmatic_restore</td>
+<td>Ensure systemd services and timers for backups and integrity checks specified in borgmatic_configs are configured</td>
 </tr>
 <tr>
 <td>borgmatic_user</td>
 <td>User that runs borgmatic</td>
 </tr>
 <tr>
-<td>borgmatic_remote_public_keys</td>
-<td>Public keys belonging to backup servers to register in the known_hosts file</td>
+<td>borgmatic_local_ssh_options</td>
+<td>SSH command line options used by control node when managing keys on remote backup servers</td>
 </tr>
 <tr>
-<td>borgmatic_local_ssh_options</td>
-<td>SSH command line options used by control node when installing keys</td>
+<td>borgmatic_remote_public_keys</td>
+<td>Public keys belonging to backup servers to be registered in the known_hosts file</td>
 </tr>
 <tr>
 <td>borgmatic_remote_options</td>
-<td>Server-side options applied to authorized_keys entries</td>
+<td>Server-side options applied to authorized_keys entries on remote backup servers</td>
 </tr>
 <tr>
 <td>borgmatic_restore</td>
-<td>Arguments to use when executing a restoration</td>
+<td>Defines restoration that will be performed when borgmatic_perform_restore is set to true</td>
 </tr>
 <tr>
 <td>borgmatic_configs</td>
-<td>Multiple configurations can be specified as separate list items</td>
+<td>Defines borgmatic config details</td>
+</tr>
+<tr>
+<td>borgmatic_perform_restore</td>
+<td>Perform restoration of backup as defined in borgmatic_restore</td>
 </tr>
 </table>
 
-<!-- If a backup schedule is set for a config, but no check schedule is set, consistency checks will be performed alongside backups. To save time and resources, an independent check schedule can be set. -->
-If an independent `check` schedule is set, consistency checking will be decoupled from backups, otherwise checks are run subsequent to each backup, which can take quite a while for a large repository.
+The variables `borgmatic_remote_options`, `borgmatic_configs` and `borgmatic_restore` can include multiple items following the same structure.
+
+For `borgmatic_configs`, if an independent `check` schedule is set, consistency checking will be decoupled from backups, otherwise consistency checks are run subsequent to each backup.
 
 Append only mode is enforced server side, and not set at repository initialization. This allows for periodic manual pruning to save space while protecting remote integrity.
 
@@ -268,21 +269,21 @@ To restore a previous backup, set `borgmatic_restore` with restoration details:
 ```yaml
 borgmatic_restore:
   # Repository to restore from
-  repository: user@example.com:/path/to/repo
-
-  # Optionally specify the archive,
-  # defaults to 'latest'
-  archive: latest
-
-  # Optionally specify a list of source paths 
-  # from within the archive to restore
-  # defaults to entire archive
-  paths:
-    - /home/username
-    - /etc
-
-  # Destination that will be restored into
-  destination: '/'
+  - repository: user@example.com:/path/to/repo
+  
+    # Optionally specify the archive,
+    # defaults to 'latest'
+    archive: latest
+  
+    # Optionally specify a list of source paths 
+    # from within the archive to restore
+    # defaults to entire archive
+    paths:
+      - /home/username
+      - /etc
+  
+    # Destination that will be restored into
+    destination: '/'
 ```
 
 To perform the restoration, set `borgmatic_perform_restore=true` at playbook runtime:
@@ -316,9 +317,7 @@ borgmatic_remote_public_keys:
   - example.com ssh-rsa AAAA...
   - example.com ecdsa-sha2-nistp256 AAAA...
 
-borgmatic_local_ssh_options:
-  - '-p 22'
-  - '-i ~/.ssh/id_rsa'
+borgmatic_local_ssh_options: '-i ~/.ssh/id_rsa'
 ```
 
 ## Example `host_vars/inventory_hostname.yml`
@@ -329,10 +328,6 @@ This is a starting point for a typical Linux workstation:
 # Variables for specific host <inventory_hostname>
 
 ---
-
-borgmatic_restore:
-  repository: user@example.com:/path/to/repo
-  destination: '/'
 
 borgmatic_configs:
   # Typical setup for daily backups to a remote server
@@ -363,7 +358,7 @@ borgmatic_configs:
         # rsync.net requires borg1
         remote_path: borg1
       storage:
-        encryption_passphrase: secretpassphrase
+        encryption_passphrase: redacted
 
       retention:
         keep_hourly: 24
@@ -397,7 +392,7 @@ borgmatic_configs:
           - /media/username/backup
 
       storage:
-        encryption_passphrase: secretpassphrase
+        encryption_passphrase: redacted
 
       retention:
         keep_hourly: 24
@@ -415,6 +410,11 @@ borgmatic_configs:
         # Exit if external drive is not mounted
         before_backup:
           - findmnt /media/username/backup > /dev/null || exit 75
+
+borgmatic_restore:
+  - repository: user@example.com:/path/to/repo
+    destination: '/'
+
 ```
 
 [borg]: https://www.borgbackup.org/

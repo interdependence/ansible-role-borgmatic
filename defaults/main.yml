@@ -11,14 +11,14 @@ borgmatic_configure_services: true
 # User that will run borgmatic
 borgmatic_user: root
 
+# Arguments passed to local SSH commands
+borgmatic_local_ssh_options: ''
+
 # List of public keys belonging to remote backup servers
 borgmatic_remote_public_keys: []
 # - example.com ssh-ed25519 AAAA...
 # - example.com ssh-rsa AAAA...
 # - example.com ecdsa-sha2-nistp256 AAAA...
-
-# Arguments passed to local SSH commands
-borgmatic_local_ssh_options: ''
 
 # List of dictionaries containing remote backup server options
 borgmatic_remote_options: []
@@ -107,7 +107,7 @@ borgmatic_configs: []
 
 # List of dictionaries containing restore options
 borgmatic_restore: []
-#   # Repository to restore from
+# # Repository to restore from
 # - repository: user@example.com:/path/to/repo
 #
 #   # Optionally specify the archive,
