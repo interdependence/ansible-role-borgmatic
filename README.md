@@ -254,7 +254,7 @@ borgmatic_restore:
 </tr>
 </table>
 
-The variables `borgmatic_remote_options`, `borgmatic_configs` and `borgmatic_restore` can include multiple items following the same structure.
+`borgmatic_remote_options`, `borgmatic_configs` and `borgmatic_restore` can include multiple items following the same structure.
 
 For `borgmatic_configs`, if an independent `check` schedule is set, consistency checking will be decoupled from backups, otherwise consistency checks are run subsequent to each backup.
 
