@@ -7,7 +7,7 @@
     borgmatic init
       --verbosity 1
       --config {{ item.path }}
-      --encryption {{ item.encryption | mandatory }}
+      --encryption {{ item.encryption }}
       --override storage.ssh_command='ssh -o BatchMode=yes'
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'

@@ -2,11 +2,127 @@
 
 ---
 
+# Enable or disable tasks
 borgmatic_configure_package: true
 borgmatic_configure_ssh: true
 borgmatic_configure_repositories: true
 borgmatic_configure_services: true
-borgmatic_perform_restore: false
+
+# User that will run borgmatic
 borgmatic_user: root
+
+# List of public keys belonging to remote backup servers
 borgmatic_remote_public_keys: []
-borgmatic_local_ssh_options: []
+# - example.com ssh-ed25519 AAAA...
+# - example.com ssh-rsa AAAA...
+# - example.com ecdsa-sha2-nistp256 AAAA...
+
+# Arguments passed to local SSH commands
+borgmatic_local_ssh_options: ''
+
+# List of dictionaries containing remote backup server options
+borgmatic_remote_options: []
+# - remote: user@example.com
+#   remote_path: borg1
+#   append_only: true
+#   storage_quota: 100G
+#   restrict:
+#     repositories:
+#       - repo1
+#       - repo2
+#     paths:
+#       - path1
+#       - path2
+
+# List of dictionaries containing borgmatic configs
+borgmatic_configs: []
+# - name: remote
+#
+#   # Optional, if set to 'absent',
+#   # specified borgmatic config will be
+#   # removed, as well as remote access
+#   # and any related services and timers
+#   # defaults to 'present'
+#   state: present
+#
+#   # Location of borgmatic config file
+#   path: /etc/borgmatic.d/remote.yaml
+#
+#   # Needed for repository initialization
+#   encryption: repokey-blake2
+#
+#   # Optional, if no schedule is set,
+#   # borgmatic config will be installed,
+#   # but no systemd services or timers
+#   # will be created
+#   schedule:
+#     # Optional, create systemd service
+#     # and timer for backups
+#     backup:
+#       # Set systemd timer 'OnCalendar'
+#       oncalendar: daily
+#       # Optional, set start delay
+#       delay: 5m
+#
+#     # Optional, create separate systemd
+#     # service and timer for running
+#     # consistency checks
+#     # If not specified, checks are run
+#     # immediately after backups
+#     check:
+#       # Set systemd timer 'OnCalendar'
+#       oncalendar: weekly
+#       # Optional, set start delay
+#       delay: 1h
+#
+#   # Content of borgmatic config file
+#   # See https://torsion.org/borgmatic/
+#   config:
+#     location:
+#       source_directories:
+#         - /home/username
+#
+#       repositories:
+#         - user@example.com:/path/to/repo
+#
+#       exclude_patterns:
+#         - /home/username/.cache
+#
+#       # rsync.net requires borg1
+#       remote_path: borg1
+#     storage:
+#       encryption_passphrase: redacted
+#
+#     retention:
+#       keep_hourly: 24
+#       keep_daily: 7
+#       keep_weekly: 4
+#       keep_monthly: 6
+#       keep_yearly: 1
+#
+#     consistency:
+#       checks:
+#         - repository
+#         - archives
+
+# List of dictionaries containing restore options
+borgmatic_restore: []
+#   # Repository to restore from
+# - repository: user@example.com:/path/to/repo
+#
+#   # Optionally specify the archive,
+#   # defaults to 'latest'
+#   archive: latest
+#
+#   # Optionally specify a list of source paths 
+#   # from within the archive to restore
+#   # defaults to entire archive
+#   paths:
+#     - /home/username
+#     - /etc
+#
+#   # Destination that will be restored into
+#   destination: '/'
+
+# If set to true, borgmatic will perform restore defined in borgmatic_restore
+borgmatic_perform_restore: false

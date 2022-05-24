@@ -27,9 +27,7 @@
 
 - name: Retrieve remote authorized_keys files from each remote server
   ansible.builtin.command:
-    cmd: >
-      ssh {{ borgmatic_local_ssh_options }} {{ item }}
-      tail -n 100 .ssh/authorized_keys
+    cmd: 'ssh {{ borgmatic_local_ssh_options }} {{ item }} tail -n 100 .ssh/authorized_keys'
   loop: '{{ borgmatic_remotes }}'
   changed_when: false
   become: false

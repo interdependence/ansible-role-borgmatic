@@ -4,9 +4,9 @@ An ansible role to configure automated [borg] backups using [borgmatic], compati
 
 ## Requirements
 
-If remote servers are configured in [repository-restricted] mode, and key based authentication is enforced, an unrestricted key must be used to perform management tasks on the remote backup servers. In order to protect remote repository integrity in the event that the control node is compromised, this key should be passphrase protected.
+If remote servers are configured in [repository-restricted] mode, and key based authentication is enforced, a privileged key on the control node must be used to perform management tasks on the remote backup servers. In order to protect remote repository integrity in the event that the control node is compromised, this key should be passphrase protected.
 
-Once the management public key has been manually added to the backup servers `authorized_keys` file, password authentication can be disabled. If using [rsync.net] this can be done through the [rsync.net web interface]. 
+Once the privileged public key has been manually added to the backup servers `authorized_keys` file, password authentication can be disabled. For [rsync.net] this can be done through the [rsync.net web interface]. 
 
 ## Role Variables
 
@@ -37,14 +37,20 @@ Once the management public key has been manually added to the backup servers `au
 <td>false</td>
 </tr>
 <tr>
-<td>borgmatic_perform_restore</td>
-<td>false</td>
-<td>true</td>
-</tr>
-<tr>
 <td>borgmatic_user</td>
 <td>root</td>
 <td>username</td>
+</tr>
+<tr>
+<td>borgmatic_local_ssh_options</td>
+<td>[ ]</td>
+<td>
+
+```yaml
+borgmatic_local_ssh_options: '-p 22 -i ~/.ssh/id_rsa'
+```
+
+</td>
 </tr>
 <tr>
 <td>borgmatic_remote_public_keys</td>
@@ -56,19 +62,6 @@ borgmatic_remote_public_keys:
   - example.com ssh-ed25519 AAAA...
   - example.com ssh-rsa AAAA...
   - example.com ecdsa-sha2-nistp256 AAAA...
-```
-
-</td>
-</tr>
-<tr>
-<td>borgmatic_local_ssh_options</td>
-<td>[ ]</td>
-<td>
-
-```yaml
-borgmatic_local_ssh_options:
-  - '-p 22'
-  - '-i ~/.ssh/id_rsa'
 ```
 
 </td>
@@ -91,33 +84,6 @@ borgmatic_remote_options:
       paths:
         - path1
         - path2
-```
-
-</td>
-</tr>
-<tr>
-<td>borgmatic_restore</td>
-<td></td>
-<td>
-
-```yaml
-borgmatic_restore:
-  # Repository to restore from
-  repository: user@example.com:/path/to/repo
-
-  # Optionally specify the archive,
-  # defaults to 'latest'
-  archive: latest
-
-  # Optionally specify a list of source paths 
-  # from within the archive to restore
-  # defaults to entire archive
-  paths:
-    - /home/username
-    - /etc
-
-  # Destination that will be restored into
-  destination: '/'
 ```
 
 </td>
@@ -200,6 +166,38 @@ borgmatic_configs:
 ```
 
 </td>
+</tr>
+<tr>
+<td>borgmatic_restore</td>
+<td>{ }</td>
+<td>
+
+```yaml
+borgmatic_restore:
+  # Repository to restore from
+  repository: user@example.com:/path/to/repo
+
+  # Optionally specify the archive,
+  # defaults to 'latest'
+  archive: latest
+
+  # Optionally specify a list of source paths 
+  # from within the archive to restore
+  # defaults to entire archive
+  paths:
+    - /home/username
+    - /etc
+
+  # Destination that will be restored into
+  destination: '/'
+```
+
+</td>
+</tr>
+<tr>
+<td>borgmatic_perform_restore</td>
+<td>false</td>
+<td>true</td>
 </tr>
 </table>
 

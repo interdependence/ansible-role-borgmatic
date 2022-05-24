@@ -1,15 +1,24 @@
-# Restore previous backup from archive
+# Restore previous backups
 
 ---
 
-- name: Restore previous backup from archive
+- name: Assert that at least one borgmatic restore item is defined
+  ansible.builtin.assert:
+    that:
+      - '{{ borgmatic_restore[0].repository }} is defined'
+      - '{{ borgmatic_restore[0].destination }} is defined'
+    fail_msg: Must define at least one borgmatic restore in borgmatic_restore
+
+- name: Restore previous backups
   ansible.builtin.command: >
     borgmatic extract
-    --repository {{ borgmatic_restore.repository | mandatory }}
-    --archive {{ borgmatic_restore.archive | default('latest') }}
-    {% if borgmatic_restore.paths is defined %}
-      --path{% for path in borgmatic_restore.paths %} {{ path.lstrip('/') }}{% endfor %}
+    --repository {{ item.repository }}
+    --archive {{ item.archive | default('latest') }}
+    {% if item.paths is defined %}
+      --path{% for path in item.paths %} {{ path.lstrip('/') }}{% endfor %}
     {% endif %}
-    --destination {{ borgmatic_restore.destination | mandatory }}
+    --destination {{ item.destination }}
   changed_when: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  when: item.perform | default(true) != false
+  loop: '{{ borgmatic_restore }}'

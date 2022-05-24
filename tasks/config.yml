@@ -2,13 +2,22 @@
 
 ---
 
+- name: Assert that at least one borgmatic config is defined
+  ansible.builtin.assert:
+    that:
+      - '{{ borgmatic_configs[0].name }} is defined'
+      - '{{ borgmatic_configs[0].path }} is defined'
+      - '{{ borgmatic_configs[0].encryption }} is defined'
+      - '{{ borgmatic_configs[0].config.location.repositories }} is defined'
+    fail_msg: Must define at least one borgmatic config in borgmatic_configs
+
 - name: Set absent borgmatic configs
   ansible.builtin.set_fact:
-    borgmatic_absent_configs: '{{ borgmatic_configs | mandatory | selectattr("state", "eq", "absent") }}'
+    borgmatic_absent_configs: '{{ borgmatic_configs | selectattr("state", "eq", "absent") }}'
 
 - name: Set present borgmatic configs
   ansible.builtin.set_fact:
-    borgmatic_present_configs: '{{ borgmatic_configs | mandatory | difference(borgmatic_absent_configs) }}'
+    borgmatic_present_configs: '{{ borgmatic_configs | difference(borgmatic_absent_configs) }}'
 
 - name: Ensure absent borgmatic configuration files are removed
   ansible.builtin.file:
@@ -16,7 +25,7 @@
     state: absent
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
-  notify: Ensure absent services are removed
+  notify: Ensure absent borgmatic services are removed
   loop: '{{ borgmatic_absent_configs }}'
 
 - name: Ensure borgmatic configuration paths exist
@@ -38,5 +47,5 @@
     mode: 0600
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
-  notify: Ensure services are configured
+  notify: Ensure borgmatic services are configured
   loop: '{{ borgmatic_present_configs }}'
