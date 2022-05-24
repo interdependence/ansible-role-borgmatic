@@ -5,11 +5,12 @@
 - name: Assert that at least one borgmatic config is defined
   ansible.builtin.assert:
     that:
-      - '{{ borgmatic_configs[0].name }} is defined'
-      - '{{ borgmatic_configs[0].path }} is defined'
-      - '{{ borgmatic_configs[0].encryption }} is defined'
-      - '{{ borgmatic_configs[0].config.location.repositories }} is defined'
+      - borgmatic_configs[0].name is defined
+      - borgmatic_configs[0].path is defined
+      - borgmatic_configs[0].encryption is defined
+      - borgmatic_configs[0].config.location.repositories is defined
     fail_msg: Must define at least one borgmatic config in borgmatic_configs
+    quiet: true 
 
 - name: Set absent borgmatic configs
   ansible.builtin.set_fact:
