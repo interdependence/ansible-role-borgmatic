@@ -12,6 +12,7 @@
     mode: 0644
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   when: item.schedule.backup.oncalendar is defined
   loop: '{{ borgmatic_present_configs }}'
 
@@ -24,6 +25,7 @@
     mode: 0644
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   when: item.schedule.backup.oncalendar is defined
   loop: '{{ borgmatic_present_configs }}'
 
@@ -36,6 +38,7 @@
     enabled: true
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   when: item.schedule.backup.oncalendar is defined
   loop: '{{ borgmatic_present_configs }}'
 
@@ -49,6 +52,7 @@
     mode: 0644
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   when: item.schedule.check.oncalendar is defined
   loop: '{{ borgmatic_present_configs }}'
 
@@ -61,6 +65,7 @@
     mode: 0644
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   when: item.schedule.check.oncalendar is defined
   loop: '{{ borgmatic_present_configs }}'
 
@@ -73,5 +78,6 @@
     enabled: true
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   when: item.schedule.check.oncalendar is defined
   loop: '{{ borgmatic_present_configs }}'

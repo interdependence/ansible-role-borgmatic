@@ -26,6 +26,7 @@
     state: absent
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   notify: Ensure absent borgmatic services are removed
   loop: '{{ borgmatic_absent_configs }}'
 
@@ -37,6 +38,7 @@
     group: '{{ borgmatic_user_facts.group }}'
     mode: 0700
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   loop: '{{ borgmatic_present_configs | map(attribute="path") | map("dirname") | unique }}'
 
 - name: Ensure borgmatic configuration files are populated
@@ -48,5 +50,6 @@
     mode: 0600
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   notify: Ensure borgmatic services are configured
   loop: '{{ borgmatic_present_configs }}'

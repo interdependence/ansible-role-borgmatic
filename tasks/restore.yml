@@ -20,5 +20,6 @@
     --destination {{ item.destination }}
   changed_when: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   when: item.perform | default(true) != false
   loop: '{{ borgmatic_restore }}'

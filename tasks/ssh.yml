@@ -9,6 +9,7 @@
     state: present
   loop: '{{ borgmatic_remote_public_keys }}'
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
 
 - name: Set list of remote servers
   ansible.builtin.set_fact:

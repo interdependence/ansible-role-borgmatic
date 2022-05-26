@@ -10,6 +10,7 @@
     enabled: false
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   loop: '{{ borgmatic_absent_configs }}'
 
 - name: Ensure absent backup timers are removed
@@ -18,6 +19,7 @@
     state: absent
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   loop: '{{ borgmatic_absent_configs }}'
 
 - name: Ensure absent backup services are removed
@@ -26,6 +28,7 @@
     state: absent
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   loop: '{{ borgmatic_absent_configs }}'
 
 - name: Ensure absent check timers are disabled
@@ -36,6 +39,7 @@
     enabled: false
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   loop: '{{ borgmatic_absent_configs }}'
 
 - name: Ensure absent check timers are removed
@@ -44,6 +48,7 @@
     state: absent
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   loop: '{{ borgmatic_absent_configs }}'
 
 - name: Ensure absent check services are removed
@@ -52,4 +57,5 @@
     state: absent
   no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   loop: '{{ borgmatic_absent_configs }}'
