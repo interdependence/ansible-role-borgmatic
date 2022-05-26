@@ -1,6 +1,6 @@
 # ansible-role-borgmatic
 
-An ansible role to configure automated [borg] backups using [borgmatic], compatible with [rsync.net].
+An Ansible role to configure automated [borg] backups using [borgmatic], compatible with [rsync.net].
 
 ## Requirements
 
