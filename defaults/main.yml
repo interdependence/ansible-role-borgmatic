@@ -3,7 +3,7 @@
 ---
 
 # Enable or disable tasks
-borgmatic_configure_package: true
+borgmatic_install: true
 borgmatic_configure_ssh: true
 borgmatic_configure_repositories: true
 borgmatic_configure_services: true

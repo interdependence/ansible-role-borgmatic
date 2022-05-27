@@ -7,7 +7,7 @@
     name: borgmatic
     state: present
   become: true
-  when: borgmatic_configure_package
+  when: borgmatic_install
 
 - name: Ensure borgmatic user is configured
   ansible.builtin.user:

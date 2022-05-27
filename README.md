@@ -17,7 +17,7 @@ Once the privileged public key has been manually added to the remote backup serv
 <th>Example</th>
 </tr>
 <tr>
-<td>borgmatic_configure_package</td>
+<td>borgmatic_install</td>
 <td>true</td>
 <td>false</td>
 </tr>
@@ -209,7 +209,7 @@ borgmatic_restore:
 <th>Notes</th>
 </tr>
 <tr>
-<td>borgmatic_configure_package</td>
+<td>borgmatic_install</td>
 <td>Ensure the borgmatic package is installed</td>
 </tr>
 <tr>
