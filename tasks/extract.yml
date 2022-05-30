@@ -1,15 +1,15 @@
-# Restore previous backups
+# Extract backup data
 
 ---
 
-- name: Assert that at least one borgmatic restore item is defined
+- name: Assert that at least one borgmatic extract item is defined
   ansible.builtin.assert:
     that:
-      - borgmatic_restore[0].repository is defined
-      - borgmatic_restore[0].destination is defined
-    fail_msg: Must define at least one borgmatic restore in borgmatic_restore
+      - borgmatic_extract[0].repository is defined
+      - borgmatic_extract[0].destination is defined
+    fail_msg: Must define at least one borgmatic extract in borgmatic_extract
 
-- name: Restore previous backups
+- name: Extract backup data
   ansible.builtin.command: >
     borgmatic extract
     --repository {{ item.repository }}
@@ -22,4 +22,4 @@
   become_user: '{{ borgmatic_user_facts.name }}'
   become: true
   when: item.perform | default(true) != false
-  loop: '{{ borgmatic_restore }}'
+  loop: '{{ borgmatic_extract }}'

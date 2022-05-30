@@ -105,9 +105,9 @@ borgmatic_configs: []
 #         - repository
 #         - archives
 
-# List of dictionaries containing restore options
-borgmatic_restore: []
-# # Repository to restore from
+# List of dictionaries containing extract options
+borgmatic_extract: []
+# # Repository to extract from
 # - repository: user@example.com:/path/to/repo
 #
 #   # Optionally specify the archive,
@@ -115,14 +115,14 @@ borgmatic_restore: []
 #   archive: latest
 #
 #   # Optionally specify a list of source paths 
-#   # from within the archive to restore
+#   # from within the archive to extract from
 #   # defaults to entire archive
 #   paths:
 #     - /home/username
 #     - /etc
 #
-#   # Destination that will be restored into
+#   # Destination that will be extracted into
 #   destination: '/'
 
-# If set to true, borgmatic will perform restore defined in borgmatic_restore
-borgmatic_perform_restore: false
+# If set to true, borgmatic will perform extract defined in borgmatic_extract
+borgmatic_perform_extract: false

@@ -168,13 +168,13 @@ borgmatic_configs:
 </td>
 </tr>
 <tr>
-<td>borgmatic_restore</td>
+<td>borgmatic_extract</td>
 <td>[ ]</td>
 <td>
 
 ```yaml
-borgmatic_restore:
-  # Repository to restore from
+borgmatic_extract:
+  # Repository to extract from
   - repository: user@example.com:/path/to/repo
 
     # Optionally specify the archive,
@@ -182,20 +182,20 @@ borgmatic_restore:
     archive: latest
 
     # Optionally specify a list of source paths 
-    # from within the archive to restore
+    # from within the archive to extract
     # defaults to entire archive
     paths:
       - /home/username
       - /etc
 
-    # Destination that will be restored into
+    # Destination that will be extracted into
     destination: '/'
 ```
 
 </td>
 </tr>
 <tr>
-<td>borgmatic_perform_restore</td>
+<td>borgmatic_perform_extract</td>
 <td>false</td>
 <td>true</td>
 </tr>
@@ -241,20 +241,20 @@ borgmatic_restore:
 <td>Server-side options applied to authorized_keys entries on remote backup servers</td>
 </tr>
 <tr>
-<td>borgmatic_restore</td>
-<td>Defines restoration that will be performed when borgmatic_perform_restore is set to true</td>
+<td>borgmatic_extract</td>
+<td>Defines data extract that will be performed when borgmatic_perform_extract is set to true</td>
 </tr>
 <tr>
 <td>borgmatic_configs</td>
 <td>Defines borgmatic config details</td>
 </tr>
 <tr>
-<td>borgmatic_perform_restore</td>
-<td>Perform restoration of backup as defined in borgmatic_restore</td>
+<td>borgmatic_perform_extract</td>
+<td>Perform extract of backup data as defined in borgmatic_extract</td>
 </tr>
 </table>
 
-`borgmatic_remote_options`, `borgmatic_configs` and `borgmatic_restore` can include multiple items following the same structure.
+`borgmatic_remote_options`, `borgmatic_configs` and `borgmatic_extract` can include multiple items following the same structure.
 
 For `borgmatic_configs`, if an independent `check` schedule is set, consistency checking will be decoupled from backups, otherwise consistency checks are run subsequent to each backup.
 
@@ -262,13 +262,13 @@ Append only mode is enforced server side, and not set at repository initializati
 
 It is recommended that sensitive variables be stored in a [vault]. Variables shared between hosts can be placed in a group vault such as `group_vars/all.yml`, and host specific variables can be placed in a host specific vault such as `host_vars/inventory_hostname.yml`.
 
-### Restoring
+### Extracting Backup Data
 
-To restore a previous backup, set `borgmatic_restore` with restoration details:
+To extract data from a previous backup, set `borgmatic_extract`:
 
 ```yaml
-borgmatic_restore:
-  # Repository to restore from
+borgmatic_extract:
+  # Repository to extract from
   - repository: user@example.com:/path/to/repo
   
     # Optionally specify the archive,
@@ -276,20 +276,20 @@ borgmatic_restore:
     archive: latest
   
     # Optionally specify a list of source paths 
-    # from within the archive to restore
+    # from within the archive to extract
     # defaults to entire archive
     paths:
       - /home/username
       - /etc
   
-    # Destination that will be restored into
+    # Destination that will be extracted into
     destination: '/'
 ```
 
-To perform the restoration, set `borgmatic_perform_restore=true` at playbook runtime:
+To perform the extract, set `borgmatic_perform_extract=true` at playbook runtime:
 
 ```sh
-ansible-playbook playbook.yml -e 'borgmatic_perform_restore=true'
+ansible-playbook playbook.yml -e 'borgmatic_perform_extract=true'
 ```
 
 ## Example Playbook
@@ -411,10 +411,9 @@ borgmatic_configs:
         before_backup:
           - findmnt /media/username/backup > /dev/null || exit 75
 
-borgmatic_restore:
+borgmatic_extract:
   - repository: user@example.com:/path/to/repo
     destination: '/'
-
 ```
 
 [borg]: https://www.borgbackup.org/

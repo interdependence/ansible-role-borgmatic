@@ -36,5 +36,5 @@
 - include_tasks: repositories.yml
   when: borgmatic_configure_repositories
 
-- include_tasks: restore.yml
-  when: borgmatic_perform_restore
+- include_tasks: extract.yml
+  when: borgmatic_perform_extract
