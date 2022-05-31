@@ -16,7 +16,7 @@
   become: true
   loop_control:
     label: '{{ service_file }}'
-  when: item.state | default('present') == 'present'
+  when: item.state | default('present') == 'present' and item.schedule.backup.oncalendar is defined
   loop: '{{ borgmatic_configs }}'
 
 - name: Ensure unused systemd service files for backups are absent
@@ -29,7 +29,7 @@
   become: true
   loop_control:
     label: '{{ service_file }}'
-  when: item.state | default('present') == 'absent'
+  when: item.state | default('present') == 'absent' or item.schedule.backup.oncalendar is not defined
   loop: '{{ borgmatic_configs }}'
 
 # Backup timers
@@ -99,7 +99,7 @@
   become: true
   loop_control:
     label: '{{ service_file }}'
-  when: item.state | default('present') == 'present'
+  when: item.state | default('present') == 'present' and item.schedule.check.oncalendar is defined
   loop: '{{ borgmatic_configs }}'
 
 - name: Ensure unused systemd service files for checks are absent
@@ -112,7 +112,7 @@
   become: true
   loop_control:
     label: '{{ service_file }}'
-  when: item.state | default('present') == 'absent'
+  when: item.state | default('present') == 'absent' or item.schedule.check.oncalendar is not defined
   loop: '{{ borgmatic_configs }}'
 
 # Check timers
