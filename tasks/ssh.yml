@@ -7,9 +7,9 @@
     name: '{{ item.split()[0] }}'
     key: '{{ item }}'
     state: present
-  loop: '{{ borgmatic_remote_public_keys }}'
   become_user: '{{ borgmatic_user_facts.name }}'
   become: true
+  loop: '{{ borgmatic_remote_public_keys }}'
 
 - name: Set list of remote servers
   ansible.builtin.set_fact:
@@ -29,23 +29,26 @@
 - name: Retrieve remote authorized_keys files from each remote server
   ansible.builtin.command:
     cmd: 'ssh {{ borgmatic_local_ssh_options }} {{ item }} tail -n 100 .ssh/authorized_keys'
-  loop: '{{ borgmatic_remotes }}'
   changed_when: false
-  become: false
   delegate_to: localhost
   register: authorized_keys
+  loop: '{{ borgmatic_remotes }}'
 
 - name: Ensure remote authorized_keys files are configured for each remote server
   ansible.builtin.shell:
     cmd: >
-      echo -e '{{ correct_authorized_keys | join("\n") }}' |
+      echo -e '{{ correct_keys | join("\n") }}' |
       ssh {{ borgmatic_local_ssh_options }} {{ item }}
       dd of=.ssh/authorized_keys
   vars:
-    # Retrieve list of repositories with state: 'present' on this remote
-    present_repositories: >-
+    # Retrieve list of repositories on this remote in configs without state: 'absent'
+    present_repositories: >
       {{
-        borgmatic_present_configs |
+        borgmatic_configs |
+        selectattr('state', 'defined') |
+        selectattr('state', 'eq', 'present') |
+        rejectattr('state', 'eq', 'absent') |
+        union(borgmatic_configs | selectattr('state', 'undefined')) |
         map(attribute='config') |
         map(attribute='location') |
         map(attribute='repositories') |
@@ -56,44 +59,28 @@
         unique
       }}
     # If borgmatic_remote_options is set, look for an entry that matches this remote
-    options: >-
-      {{ 
-        borgmatic_remote_options | selectattr('remote', 'eq', item) | first 
-        if borgmatic_remote_options is defined and borgmatic_remote_options | selectattr('remote', 'eq', item)
-      }}
+    options: '{{ borgmatic_remote_options | selectattr("remote", "defined") | selectattr("remote", "eq", item) | first }}'
     remote_path: '{{ options.remote_path | default("borg") }}'
     append_only: '{{ options.append_only | default(false) }}'
     storage_quota: '{{ options.storage_quota | default(None) }}'
     restrict:
-      # Only include repositories that have state: 'present'
+      # Only include repositories that are present
       repositories: '{{ options.restrict.repositories | default([]) | intersect(present_repositories) }}'
       paths: '{{ options.restrict.paths | default([]) }}'
     public_key: '{{ borgmatic_user_facts.ssh_public_key | from_yaml }}'
     # Current authorized_keys entries for this remote
-    current_authorized_keys: >-
-      {{ 
-        authorized_keys.results |
-        selectattr('item', 'eq', item) |
-        map(attribute="stdout_lines") |
-        flatten
-      }}
-    authorized_keys_entry: >-
+    current_keys: '{{ authorized_keys.results | selectattr("item", "eq", item) | map(attribute="stdout_lines") | flatten }}'
+    correct_entry: >-
       {% if options %}command="{{ remote_path }} serve
       {%- if append_only %} --append-only{% endif %}
       {%- if storage_quota %} --storage-quota {{ storage_quota}}{% endif %}
       {%- for repository in restrict.repositories %} --restrict-to-repository {{ repository }}{% endfor %}
       {%- for path in restrict.paths %} --restrict-to-path {{ path }}{% endfor %}",restrict {% endif -%}
       {{ public_key }}
-    # Current authorized_keys entries without this one
-    cleaned_authorized_keys: '{{ current_authorized_keys | reject("search", public_key | regex_escape) }}'
+    # Current authorized_keys entries without this public key
+    cleaned_keys: '{{ current_keys | reject("search", public_key | regex_escape) }}'
     # Expected authorized_keys entries for this remote
-    correct_authorized_keys: >-
-      {{
-        cleaned_authorized_keys | union([authorized_keys_entry])
-        if present_repositories else 
-        cleaned_authorized_keys
-      }}  
-  when: current_authorized_keys != correct_authorized_keys
-  loop: '{{ borgmatic_remotes }}'
-  become: false
+    correct_keys: '{{ cleaned_keys | union([correct_entry]) if present_repositories else cleaned_keys }}'
   delegate_to: localhost
+  when: current_keys != correct_keys
+  loop: '{{ borgmatic_remotes }}'

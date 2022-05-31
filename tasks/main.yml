@@ -2,12 +2,12 @@
 
 ---
 
-- name: Ensure borgmatic is installed
-  ansible.builtin.package:
-    name: borgmatic
-    state: present
-  become: true
-  when: borgmatic_install
+# - name: Ensure borgmatic is installed
+#   ansible.builtin.package:
+#     name: borgmatic
+#     state: present
+#   become: true
+#   when: borgmatic_install
 
 - name: Ensure borgmatic user is configured
   ansible.builtin.user:
@@ -38,3 +38,6 @@
 
 - include_tasks: extract.yml
   when: borgmatic_perform_extract
+
+- include_tasks: services.yml
+  when: borgmatic_configure_services

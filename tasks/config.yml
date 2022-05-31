@@ -12,23 +12,16 @@
     fail_msg: Must define at least one borgmatic config in borgmatic_configs
     quiet: true 
 
-- name: Set absent borgmatic configs
-  ansible.builtin.set_fact:
-    borgmatic_absent_configs: '{{ borgmatic_configs | selectattr("state", "eq", "absent") }}'
-
-- name: Set present borgmatic configs
-  ansible.builtin.set_fact:
-    borgmatic_present_configs: '{{ borgmatic_configs | difference(borgmatic_absent_configs) }}'
-
-- name: Ensure absent borgmatic configuration files are removed
+- name: Ensure borgmatic configuration files set to absent are removed
   ansible.builtin.file:
     path: '{{ item.path }}'
     state: absent
-  no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
   become: true
-  notify: Ensure absent borgmatic services are removed
-  loop: '{{ borgmatic_absent_configs }}'
+  loop_control:
+    label: '{{ item.path }}'
+  when: item.state | default('present') == 'absent'
+  loop: '{{ borgmatic_configs }}'
 
 - name: Ensure borgmatic configuration paths exist
   ansible.builtin.file:
@@ -39,7 +32,8 @@
     mode: 0700
   become_user: '{{ borgmatic_user_facts.name }}'
   become: true
-  loop: '{{ borgmatic_present_configs | map(attribute="path") | map("dirname") | unique }}'
+  when: item.state | default('present') == 'present'
+  loop: '{{ borgmatic_configs | map(attribute="path") | map("dirname") | unique }}'
 
 - name: Ensure borgmatic configuration files are populated
   ansible.builtin.copy:
@@ -48,8 +42,9 @@
     owner: '{{ borgmatic_user_facts.name }}'
     group: '{{ borgmatic_user_facts.group }}'
     mode: 0600
-  no_log: true
   become_user: '{{ borgmatic_user_facts.name }}'
   become: true
-  notify: Ensure borgmatic services are configured
-  loop: '{{ borgmatic_present_configs }}'
+  loop_control:
+    label: '{{ item.path }}'
+  when: item.state | default('present') == 'present'
+  loop: '{{ borgmatic_configs }}'

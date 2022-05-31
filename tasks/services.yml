@@ -1,0 +1,169 @@
+# Ensure systemd services and timers are configured
+
+---
+
+# Backup services
+- name: Ensure systemd service files are populated for backups
+  ansible.builtin.template:
+    src: borgmatic.service.j2
+    dest: '{{ service_file }}'
+    owner: '{{ borgmatic_user_facts.name }}'
+    group: '{{ borgmatic_user_facts.group }}'
+    mode: 0644
+  vars:
+    service_file: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ service_file }}'
+  when: item.state | default('present') == 'present'
+  loop: '{{ borgmatic_configs }}'
+
+- name: Ensure unused systemd service files for backups are absent
+  ansible.builtin.file:
+    path: '{{ service_file }}'
+    state: absent
+  vars:
+    service_file: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.service'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ service_file }}'
+  when: item.state | default('present') == 'absent'
+  loop: '{{ borgmatic_configs }}'
+
+# Backup timers
+- name: Ensure systemd timer files for backups are configured
+  ansible.builtin.template:
+    src: borgmatic.timer.j2
+    dest: '{{ timer_file }}'
+    owner: '{{ borgmatic_user_facts.name }}'
+    group: '{{ borgmatic_user_facts.group }}'
+    mode: 0644
+  vars:
+    timer_file: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.timer'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ timer_file }}'
+  when: item.state | default('present') == 'present' and item.schedule.backup.oncalendar is defined
+  loop: '{{ borgmatic_configs }}'
+
+- name: Retrieve existing systemd timer files for backups
+  ansible.builtin.find:
+    paths: '{{ borgmatic_systemd_path }}'
+    patterns: borgmatic-*.timer
+  register: borgmatic_timers
+
+- name: Ensure systemd timers for backups are configured
+  ansible.builtin.systemd:
+    name: 'borgmatic-{{ item.name }}.timer'
+    scope: '{{ borgmatic_systemd_scope }}'
+    daemon_reload: true
+    state: '{{ "started" if item.state | default("present") == "present" and item.schedule.backup.oncalendar is defined else "stopped" }}'
+    enabled: '{{ true if item.state | default("present") == "present" and item.schedule.backup.oncalendar is defined else false }}'
+  vars:
+    timer_name: 'borgmatic-{{ item.name }}.timer'
+    timer_file: '{{ borgmatic_systemd_path }}/{{ timer_name }}'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ timer_name }}'
+  when: timer_file in borgmatic_timers.files | map(attribute='path')
+  loop: '{{ borgmatic_configs }}'
+
+- name: Ensure unused systemd timer files for backups are absent
+  ansible.builtin.file:
+    path: '{{ timer_file }}'
+    state: absent
+  vars:
+    timer_file: '{{ borgmatic_systemd_path }}/borgmatic-{{ item.name }}.timer'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ timer_file }}'
+  when: item.state | default('present') == 'absent' or item.schedule.backup.oncalendar is not defined
+  loop: '{{ borgmatic_configs }}'
+
+# Check services
+- name: Ensure systemd service files are populated for checks
+  ansible.builtin.template:
+    src: borgmatic.service.j2
+    dest: '{{ service_file }}'
+    owner: '{{ borgmatic_user_facts.name }}'
+    group: '{{ borgmatic_user_facts.group }}'
+    mode: 0644
+  vars:
+    service_file: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.service'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ service_file }}'
+  when: item.state | default('present') == 'present'
+  loop: '{{ borgmatic_configs }}'
+
+- name: Ensure unused systemd service files for checks are absent
+  ansible.builtin.file:
+    path: '{{ service_file }}'
+    state: absent
+  vars:
+    service_file: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.service'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ service_file }}'
+  when: item.state | default('present') == 'absent'
+  loop: '{{ borgmatic_configs }}'
+
+# Check timers
+- name: Ensure systemd timer files for checks are configured
+  ansible.builtin.template:
+    src: borgmatic.timer.j2
+    dest: '{{ timer_file }}'
+    owner: '{{ borgmatic_user_facts.name }}'
+    group: '{{ borgmatic_user_facts.group }}'
+    mode: 0644
+  vars:
+    timer_file: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.timer'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ timer_file }}'
+  when: item.state | default('present') == 'present' and item.schedule.check.oncalendar is defined
+  loop: '{{ borgmatic_configs }}'
+
+- name: Retrieve existing systemd timer files for checks
+  ansible.builtin.find:
+    paths: '{{ borgmatic_systemd_path }}'
+    patterns: borgmatic-*.timer
+  register: borgmatic_timers
+
+- name: Ensure systemd timers for checks are configured
+  ansible.builtin.systemd:
+    name: 'borgmatic-check-{{ item.name }}.timer'
+    scope: '{{ borgmatic_systemd_scope }}'
+    daemon_reload: true
+    state: '{{ "started" if item.state | default("present") == "present" and item.schedule.check.oncalendar is defined else "stopped" }}'
+    enabled: '{{ true if item.state | default("present") == "present" and item.schedule.check.oncalendar is defined else false }}'
+  vars:
+    timer_name: 'borgmatic-check-{{ item.name }}.timer'
+    timer_file: '{{ borgmatic_systemd_path }}/{{ timer_name }}'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ timer_name }}'
+  when: timer_file in borgmatic_timers.files | map(attribute='path')
+  loop: '{{ borgmatic_configs }}'
+
+- name: Ensure unused systemd timer files for checks are absent
+  ansible.builtin.file:
+    path: '{{ timer_file }}'
+    state: absent
+  vars:
+    timer_file: '{{ borgmatic_systemd_path }}/borgmatic-check-{{ item.name }}.timer'
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ timer_file }}'
+  when: item.state | default('present') == 'absent' or item.schedule.check.oncalendar is not defined
+  loop: '{{ borgmatic_configs }}'
