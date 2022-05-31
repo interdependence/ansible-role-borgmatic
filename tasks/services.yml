@@ -53,6 +53,8 @@
   ansible.builtin.find:
     paths: '{{ borgmatic_systemd_path }}'
     patterns: borgmatic-*.timer
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   register: borgmatic_timers
 
 - name: Ensure systemd timers for backups are configured
@@ -136,6 +138,8 @@
   ansible.builtin.find:
     paths: '{{ borgmatic_systemd_path }}'
     patterns: borgmatic-*.timer
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
   register: borgmatic_timers
 
 - name: Ensure systemd timers for checks are configured
