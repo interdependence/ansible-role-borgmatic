@@ -242,11 +242,11 @@ borgmatic_extract:
 </tr>
 <tr>
 <td>borgmatic_extract</td>
-<td>Defines data extract that will be performed when borgmatic_perform_extract is set to true</td>
+<td>Data extract that will be performed when borgmatic_perform_extract is set to true</td>
 </tr>
 <tr>
 <td>borgmatic_configs</td>
-<td>Defines borgmatic config details</td>
+<td>Borgmatic config details</td>
 </tr>
 <tr>
 <td>borgmatic_perform_extract</td>
@@ -344,7 +344,7 @@ borgmatic_configs:
         oncalendar: weekly
         delay: 1h
 
-    content:
+    config:
       location:
         source_directories:
           - /home/username
@@ -383,13 +383,13 @@ borgmatic_configs:
     path: /etc/borgmatic.d/local.yaml
     encryption: authenticated-blake2
 
-    content:
+    config:
       location:
         source_directories:
           - /home/username
 
         repositories:
-          - /media/username/backup
+          - /run/media/username/backup
 
       storage:
         encryption_passphrase: redacted
@@ -409,7 +409,7 @@ borgmatic_configs:
       hooks:
         # Exit if external drive is not mounted
         before_backup:
-          - findmnt /media/username/backup > /dev/null || exit 75
+          - findmnt /run/media/username/backup > /dev/null || exit 75
 
 borgmatic_extract:
   - repository: user@example.com:/path/to/repo
