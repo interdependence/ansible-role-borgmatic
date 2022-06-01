@@ -73,7 +73,7 @@
     correct_entry: >-
       {% if options %}command="{{ remote_path }} serve
       {%- if append_only %} --append-only{% endif %}
-      {%- if storage_quota %} --storage-quota {{ storage_quota}}{% endif %}
+      {%- if storage_quota %} --storage-quota {{ storage_quota }}{% endif %}
       {%- for repository in restrict.repositories %} --restrict-to-repository {{ repository }}{% endfor %}
       {%- for path in restrict.paths %} --restrict-to-path {{ path }}{% endfor %}",restrict {% endif -%}
       {{ public_key }}

@@ -2,12 +2,12 @@
 
 ---
 
-# - name: Ensure borgmatic is installed
-#   ansible.builtin.package:
-#     name: borgmatic
-#     state: present
-#   become: true
-#   when: borgmatic_install
+- name: Ensure borgmatic is installed
+  ansible.builtin.package:
+    name: borgmatic
+    state: present
+  become: true
+  when: borgmatic_install
 
 - name: Ensure borgmatic user is configured
   ansible.builtin.user:
@@ -16,17 +16,14 @@
   become: true
   register: borgmatic_user_facts
 
-- name: Set sytemd path and scope if running as root
+- name: Set sytemd path and scope
   ansible.builtin.set_fact:
-    borgmatic_systemd_path: /etc/systemd/system
-    borgmatic_systemd_scope: system
-  when: borgmatic_user_facts.name == 'root'
-
-- name: Set sytemd path and scope if not running as root
-  ansible.builtin.set_fact:
-    borgmatic_systemd_path: '{{ borgmatic_user_facts.home }}/.config/systemd/user'
-    borgmatic_systemd_scope: user
-  when: borgmatic_user_facts.name != 'root'
+    borgmatic_systemd_path: >
+      {{
+        '/etc/systemd/system' if borgmatic_user_facts.name == 'root'
+        else borgmatic_user_facts.home+'/.config/systemd/user'
+      }}
+    borgmatic_systemd_scope: '{{ "system" if borgmatic_user_facts.name == "root" else "user" }}'
 
 - include_tasks: config.yml
 
