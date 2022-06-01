@@ -7,6 +7,7 @@ galaxy_info:
   author: William Vandervalk
   description: Configure automated borg backups using borgmatic, compatible with rsync.net
   license: MIT
+  min_ansible_version: 2.12
   platforms:
     - name: Fedora
       versions:
