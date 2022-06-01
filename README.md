@@ -181,7 +181,7 @@ borgmatic_extract:
     # defaults to 'latest'
     archive: latest
 
-    # Optionally specify a list of source paths 
+    # Optionally specify a list of source paths
     # from within the archive to extract
     # defaults to entire archive
     paths:
@@ -275,7 +275,7 @@ borgmatic_extract:
     # defaults to 'latest'
     archive: latest
   
-    # Optionally specify a list of source paths 
+    # Optionally specify a list of source paths
     # from within the archive to extract
     # defaults to entire archive
     paths:
