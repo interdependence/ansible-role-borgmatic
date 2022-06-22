@@ -59,7 +59,7 @@
         unique
       }}
     # If borgmatic_remote_options is set, look for an entry that matches this remote
-    options: '{{ borgmatic_remote_options | selectattr("remote", "defined") | selectattr("remote", "eq", item) | first }}'
+    options: '{{ borgmatic_remote_options | selectattr("remote", "defined") | selectattr("remote", "eq", item) | first if borgmatic_remote_options }}'
     remote_path: '{{ options.remote_path | default("borg") }}'
     append_only: '{{ options.append_only | default(false) }}'
     storage_quota: '{{ options.storage_quota | default(None) }}'
