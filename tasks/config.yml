@@ -5,23 +5,11 @@
 - name: Assert that at least one borgmatic config is defined
   ansible.builtin.assert:
     that:
-      - borgmatic_configs[0].name is defined
       - borgmatic_configs[0].path is defined
       - borgmatic_configs[0].encryption is defined
-      - borgmatic_configs[0].config.location.repositories is defined
+      - borgmatic_configs[0].content.location.repositories is defined
     fail_msg: Must define at least one borgmatic config in borgmatic_configs
     quiet: true
-
-- name: Ensure borgmatic configuration files set to absent are removed
-  ansible.builtin.file:
-    path: '{{ item.path }}'
-    state: absent
-  become_user: '{{ borgmatic_user_facts.name }}'
-  become: true
-  loop_control:
-    label: '{{ item.path }}'
-  when: item.state | default('present') == 'absent'
-  loop: '{{ borgmatic_configs }}'
 
 - name: Ensure borgmatic configuration paths exist
   ansible.builtin.file:
@@ -30,14 +18,16 @@
     owner: '{{ borgmatic_user_facts.name }}'
     group: '{{ borgmatic_user_facts.group }}'
     mode: 0700
+    modification_time: preserve
+    access_time: preserve
   become_user: '{{ borgmatic_user_facts.name }}'
   become: true
   when: item.state | default('present') == 'present'
   loop: '{{ borgmatic_configs | map(attribute="path") | map("dirname") | unique }}'
 
-- name: Ensure borgmatic configuration files are populated
+- name: Ensure borgmatic configuration files are configured
   ansible.builtin.copy:
-    content: '{{ item.config | to_nice_yaml(width=1000, sort_keys=false) }}'
+    content: '{{ item.content | to_nice_yaml(width=1000, sort_keys=false) }}'
     dest: '{{ item.path }}'
     owner: '{{ borgmatic_user_facts.name }}'
     group: '{{ borgmatic_user_facts.group }}'
@@ -48,3 +38,15 @@
     label: '{{ item.path }}'
   when: item.state | default('present') == 'present'
   loop: '{{ borgmatic_configs }}'
+
+- name: Ensure absent borgmatic configuration files are removed
+  ansible.builtin.file:
+    path: '{{ item.path }}'
+    state: absent
+  become_user: '{{ borgmatic_user_facts.name }}'
+  become: true
+  loop_control:
+    label: '{{ item.path }}'
+  when: item.state | default('present') == 'absent'
+  loop: '{{ borgmatic_configs }}'
+

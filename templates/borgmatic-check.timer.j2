@@ -1,9 +1,0 @@
-[Unit]
-Description=borgmatic repository check timer for {{ item.name }}
-
-[Timer]
-OnCalendar={{ item.schedule.check.oncalendar }}
-Persistent=true
-
-[Install]
-WantedBy=timers.target

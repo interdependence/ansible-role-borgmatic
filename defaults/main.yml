@@ -20,64 +20,23 @@ borgmatic_remote_public_keys: []
 # - example.com ssh-rsa AAAA...
 # - example.com ecdsa-sha2-nistp256 AAAA...
 
-# Remote backup server options
-borgmatic_remote_options: []
-# - remote: user@example.com
-#   remote_path: borg1
-#   append_only: true
-#   storage_quota: 100G
-#   restrict:
-#     repositories:
-#       - repo1
-#       - repo2
-#     paths:
-#       - path1
-#       - path2
-
 # Borgmatic configs
 borgmatic_configs: []
-# - name: remote
+# # Location of borgmatic config file
+# - path: /etc/borgmatic.d/remote.yaml
 #
-#   # Optional, if set to 'absent',
+#   # Optional, if set to absent,
 #   # specified borgmatic config will be
 #   # removed, as well as remote access
-#   # and any related services and timers
-#   # defaults to 'present'
+#   # defaults to present
 #   state: present
-#
-#   # Location of borgmatic config file
-#   path: /etc/borgmatic.d/remote.yaml
 #
 #   # Needed for repository initialization
 #   encryption: repokey-blake2
 #
-#   # Optional, if no schedule is set,
-#   # borgmatic config will be installed,
-#   # but no systemd services or timers
-#   # will be created
-#   schedule:
-#     # Optional, create systemd service
-#     # and timer for backups
-#     backup:
-#       # Set systemd timer 'OnCalendar'
-#       oncalendar: daily
-#       # Optional, set start delay
-#       delay: 5m
-#
-#     # Optional, create separate systemd
-#     # service and timer for running
-#     # consistency checks
-#     # If not specified, checks are run
-#     # immediately after backups
-#     check:
-#       # Set systemd timer 'OnCalendar'
-#       oncalendar: weekly
-#       # Optional, set start delay
-#       delay: 1h
-#
 #   # Content of borgmatic config file
 #   # See https://torsion.org/borgmatic/
-#   config:
+#   content:
 #     location:
 #       source_directories:
 #         - /home/username
@@ -99,22 +58,61 @@ borgmatic_configs: []
 #       keep_weekly: 4
 #       keep_monthly: 6
 #       keep_yearly: 1
+
+# Systemd services
+borgmatic_services: []
+# # Name of systemd service
+# - name: borgmatic-remote-backup
 #
-#     consistency:
-#       checks:
-#         - repository
-#         - archives
+#   # Defaults to present
+#   state: present
+#
+#   # Path to related config file
+#   config: /etc/borgmatic.d/remote.yaml
+#
+#   # Actions to perform
+#   actions:
+#     - prune
+#     - compact
+#     - create
+#
+#   # Optional, create systemd timer
+#   timer:
+#     oncalendar: daily
+#
+# - name: borgmatic-remote-check
+#   state: present
+#   config: /etc/borgmatic.d/remote.yaml
+#   actions:
+#     - check
+#   timer:
+#     oncalendar: monthly
+#     randomizeddelaysec: 2h
+
+# Remote backup server options
+borgmatic_remote_options: []
+# - remote: user@example.com
+#   remote_path: borg1
+#   append_only: true
+#   storage_quota: 100G
+#   restrict:
+#     repositories:
+#       - repo1
+#       - repo2
+#     paths:
+#       - path1
+#       - path2
 
 # Extract options
 borgmatic_extract: []
 # # Repository to extract from
 # - repository: user@example.com:/path/to/repo
 #
-#   # Optionally specify the archive,
+#   # Optional, specify the archive,
 #   # defaults to 'latest'
 #   archive: latest
 #
-#   # Optionally specify a list of source paths
+#   # Optional, specify a list of source paths
 #   # from within the archive to extract from
 #   # defaults to entire archive
 #   paths:

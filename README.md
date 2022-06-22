@@ -4,9 +4,9 @@ An Ansible role to configure automated [borg] backups using [borgmatic], compati
 
 ## Requirements
 
-If remote servers are configured in [repository-restricted] mode, and key based authentication is enforced, a privileged key on the control node must be used to perform management of the remote backup servers. In order to protect repository integrity in the event that the control node is compromised, this key should be passphrase protected.
+If remote backup servers are configured in [repository-restricted] mode, and key based authentication is enforced, an unrestricted key on the control node must be used to perform management of the remote backup servers. In order to protect repository integrity in the event that the control node is compromised, this key should be passphrase protected.
 
-Once the privileged public key has been manually added to the remote backup servers `authorized_keys` file, password authentication can be disabled. For [rsync.net] this can be done using the [rsync.net web interface]. 
+Once the unrestricted public key has been manually added to the remote backup servers `authorized_keys` file, password authentication can be disabled. For [rsync.net] this can be done using the [rsync.net web interface]. 
 
 ## Role Variables
 
@@ -67,76 +67,27 @@ borgmatic_remote_public_keys:
 </td>
 </tr>
 <tr>
-<td>borgmatic_remote_options</td>
-<td>[ ]</td>
-<td>
-
-```yaml
-borgmatic_remote_options:
-  - remote: user@example.com
-    remote_path: borg1
-    append_only: true
-    storage_quota: 100G
-    restrict:
-      repositories:
-        - repo1
-        - repo2
-      paths:
-        - path1
-        - path2
-```
-
-</td>
-</tr>
-<tr>
 <td>borgmatic_configs</td>
 <td>[ ]</td>
 <td>
 
 ```yaml
 borgmatic_configs:
-  - name: remote
+  # Location of borgmatic config file
+  - path: /etc/borgmatic.d/remote.yaml
 
-    # Optional, if set to 'absent',
+    # Optional, if set to absent,
     # specified borgmatic config will be
     # removed, as well as remote access
-    # and any related services and timers
-    # defaults to 'present'
+    # defaults to present
     state: present
-
-    # Location of borgmatic config file
-    path: /etc/borgmatic.d/remote.yaml
 
     # Needed for repository initialization
     encryption: repokey-blake2
 
-    # Optional, if no schedule is set,
-    # borgmatic config will be installed,
-    # but no systemd services or timers
-    # will be created
-    schedule:
-      # Optional, create systemd service
-      # and timer for backups
-      backup:
-        # Set systemd timer 'OnCalendar'
-        oncalendar: daily
-        # Optional, set start delay
-        delay: 5m
-
-      # Optional, create separate systemd
-      # service and timer for running
-      # consistency checks
-      # If not specified, checks are run
-      # immediately after backups
-      check:
-        # Set systemd timer 'OnCalendar'
-        oncalendar: weekly
-        # Optional, set start delay
-        delay: 1h
-
     # Content of borgmatic config file
     # See https://torsion.org/borgmatic/
-    config:
+    content:
       location:
         source_directories:
           - /home/username
@@ -158,11 +109,67 @@ borgmatic_configs:
         keep_weekly: 4
         keep_monthly: 6
         keep_yearly: 1
+```
 
-      consistency:
-        checks:
-          - repository
-          - archives
+</td>
+</tr>
+<tr>
+<td>borgmatic_services</td>
+<td>[ ]</td>
+<td>
+
+```yaml
+borgmatic_services:
+  # Name of systemd service
+  - name: borgmatic-remote-backup
+
+    # Defaults to present
+    state: present
+ 
+    # Path of config file
+    config: /etc/borgmatic.d/remote.yaml
+ 
+    # Actions to perform
+    actions:
+      - prune
+      - compact
+      - create
+ 
+    # Optional, create systemd timer
+    timer:
+      oncalendar: daily
+ 
+  - name: borgmatic-remote-check
+    state: present
+    config: /etc/borgmatic.d/remote.yaml
+    actions:
+      - check
+    timer:
+      oncalendar: monthly
+      randomizeddelaysec: 2h
+```
+
+</td>
+</tr>
+<tr>
+<td>borgmatic_remote_options</td>
+<td>[ ]</td>
+<td>
+
+```yaml
+borgmatic_remote_options:
+  # Host specific options enforced by remote server
+  - remote: user@example.com
+    remote_path: borg1
+    append_only: true
+    storage_quota: 100G
+    restrict:
+      repositories:
+        - repo1
+        - repo2
+      paths:
+        - path1
+        - path2
 ```
 
 </td>
@@ -177,11 +184,11 @@ borgmatic_extract:
   # Repository to extract from
   - repository: user@example.com:/path/to/repo
 
-    # Optionally specify the archive,
+    # Optional, specify the archive,
     # defaults to 'latest'
     archive: latest
 
-    # Optionally specify a list of source paths
+    # Optional, specify a list of source paths
     # from within the archive to extract
     # defaults to entire archive
     paths:
@@ -214,15 +221,15 @@ borgmatic_extract:
 </tr>
 <tr>
 <td>borgmatic_configure_ssh</td>
-<td>Ensure key based authentication is configured with remote backup servers hosting repositories specified in borgmatic_configs</td>
+<td>Ensure key based authentication is configured with all remote backup servers hosting repositories specified in borgmatic_configs</td>
 </tr>
 <tr>
 <td>borgmatic_configure_repositories</td>
-<td>Initialize repositories specified in borgmatic_configs if they do not already exist</td>
+<td>Ensure repositories specified in borgmatic_configs are initialized, if they do not already exist</td>
 </tr>
 <tr>
 <td>borgmatic_configure_services</td>
-<td>Ensure systemd services and timers for backups and integrity checks specified in borgmatic_configs are configured</td>
+<td>Ensure systemd services and timers specified in borgmatic_services are configured</td>
 </tr>
 <tr>
 <td>borgmatic_user</td>
@@ -230,23 +237,27 @@ borgmatic_extract:
 </tr>
 <tr>
 <td>borgmatic_local_ssh_options</td>
-<td>SSH command line options used by control node when managing keys on remote backup servers</td>
+<td>SSH command line options used by control node when managing remote backup servers</td>
 </tr>
 <tr>
 <td>borgmatic_remote_public_keys</td>
 <td>Public keys belonging to backup servers to be registered in the known_hosts file</td>
 </tr>
 <tr>
+<td>borgmatic_configs</td>
+<td>Borgmatic config details</td>
+</tr>
+<tr>
+<td>borgmatic_services</td>
+<td>Systemd service and timer details</td>
+</tr>
+<tr>
 <td>borgmatic_remote_options</td>
-<td>Server-side options applied to authorized_keys entries on remote backup servers</td>
+<td>Host specific options enforced by remote backup servers</td>
 </tr>
 <tr>
 <td>borgmatic_extract</td>
-<td>Data extract that will be performed when borgmatic_perform_extract is set to true</td>
-</tr>
-<tr>
-<td>borgmatic_configs</td>
-<td>Borgmatic config details</td>
+<td>Extract details</td>
 </tr>
 <tr>
 <td>borgmatic_perform_extract</td>
@@ -254,11 +265,7 @@ borgmatic_extract:
 </tr>
 </table>
 
-`borgmatic_remote_options`, `borgmatic_configs` and `borgmatic_extract` can include multiple items following the same structure.
-
-For `borgmatic_configs`, if an independent `check` schedule is set, consistency checking will be decoupled from backups, otherwise consistency checks are run subsequent to each backup.
-
-Append only mode is enforced server side, and not set at repository initialization. This allows for periodic manual pruning to save space while protecting remote integrity.
+`borgmatic_configs`, `borgmatic_services`, `borgmatic_remote_options` and `borgmatic_extract` can include multiple items following the same structure.
 
 It is recommended that sensitive variables be stored in a [vault]. Variables shared between hosts can be placed in a group vault such as `group_vars/all.yml`, and host specific variables can be placed in a host specific vault such as `host_vars/inventory_hostname.yml`.
 
@@ -271,11 +278,11 @@ borgmatic_extract:
   # Repository to extract from
   - repository: user@example.com:/path/to/repo
   
-    # Optionally specify the archive,
+    # Optional, specify the archive,
     # defaults to 'latest'
     archive: latest
   
-    # Optionally specify a list of source paths
+    # Optional, specify a list of source paths
     # from within the archive to extract
     # defaults to entire archive
     paths:
@@ -325,26 +332,16 @@ borgmatic_local_ssh_options: '-i ~/.ssh/id_rsa'
 This is a starting point for a typical Linux workstation:
 
 ```yaml
-# Variables for specific host <inventory_hostname>
+# Variables for specific host
 
 ---
 
 borgmatic_configs:
-  # Typical setup for daily backups to a remote server
-  - name: remote
+  # Typical setup for backups to a remote server
+  - path: /etc/borgmatic.d/remote.yaml
     state: present
-    path: /etc/borgmatic.d/remote.yaml
     encryption: repokey-blake2
-
-    schedule:
-      backup:
-        oncalendar: daily
-        delay: 5m
-      check:
-        oncalendar: weekly
-        delay: 1h
-
-    config:
+    content:
       location:
         source_directories:
           - /home/username
@@ -367,23 +364,15 @@ borgmatic_configs:
         keep_monthly: 6
         keep_yearly: 1
 
-      consistency:
-        checks:
-          - repository
-          - archives
-
       hooks:
         healthchecks: https://hc-ping.com/your-uuid-here
 
-  # Typical setup for occasional backups to a removable drive
-  # Note that since no schedule is specified, this config will not run automatically
+  # Typical setup for backups to a removable drive
   # Repository initialization will fail if the removable drive is not mounted
-  - name: local
+  - path: /etc/borgmatic.d/local.yaml
     state: present
-    path: /etc/borgmatic.d/local.yaml
     encryption: authenticated-blake2
-
-    config:
+    content:
       location:
         source_directories:
           - /home/username
@@ -401,15 +390,39 @@ borgmatic_configs:
         keep_monthly: 6
         keep_yearly: 1
 
-      consistency:
-        checks:
-          - repository
-          - archives
-
       hooks:
         # Exit if external drive is not mounted
         before_backup:
           - findmnt /run/media/username/backup > /dev/null || exit 75
+
+borgmatic_services:
+  - name: borgmatic-remote-backup
+    state: present
+    config: /etc/borgmatic.d/remote.yaml
+    actions:
+      - prune
+      - compact
+      - create
+    timer:
+      oncalendar: daily
+ 
+  # Integrity checks are time consuming, and can be run less frequently
+  - name: borgmatic-remote-check
+    state: present
+    config: /etc/borgmatic.d/remote.yaml
+    actions:
+      - check
+    timer:
+      oncalendar: weekly
+      randomizeddelaysec: 2h
+
+borgmatic_remote_options:
+  - remote: user@example.com
+    remote_path: borg1
+    append_only: true
+    restrict:
+      repositories:
+        - /path/to/repo
 
 borgmatic_extract:
   - repository: user@example.com:/path/to/repo

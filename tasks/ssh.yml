@@ -16,7 +16,7 @@
     borgmatic_remotes: >
       {{
         borgmatic_configs |
-        map(attribute='config') |
+        map(attribute='content') |
         map(attribute='location') |
         map(attribute='repositories') |
         flatten |
@@ -49,7 +49,7 @@
         selectattr('state', 'eq', 'present') |
         rejectattr('state', 'eq', 'absent') |
         union(borgmatic_configs | selectattr('state', 'undefined')) |
-        map(attribute='config') |
+        map(attribute='content') |
         map(attribute='location') |
         map(attribute='repositories') |
         flatten |

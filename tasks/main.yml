@@ -18,11 +18,7 @@
 
 - name: Set sytemd path and scope
   ansible.builtin.set_fact:
-    borgmatic_systemd_path: >-
-      {{
-        '/etc/systemd/system' if borgmatic_user_facts.name == 'root'
-        else borgmatic_user_facts.home+'/.config/systemd/user'
-      }}
+    borgmatic_systemd_path: '{{ "/etc/systemd/system" if borgmatic_user_facts.name == "root" else borgmatic_user_facts.home+"/.config/systemd/user" }}'
     borgmatic_systemd_scope: '{{ "system" if borgmatic_user_facts.name == "root" else "user" }}'
 
 - include_tasks: config.yml

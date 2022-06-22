@@ -1,9 +1,12 @@
 [Unit]
-Description=borgmatic backup timer for {{ item.name }}
+Description={{ item.name }} timer for {{ item.config }} borgmatic config
 
 [Timer]
-OnCalendar={{ item.schedule.backup.oncalendar }}
+OnCalendar={{ item.timer.oncalendar }}
 Persistent=true
+{% if item.timer.randomizeddelaysec is defined %}
+RandomizedDelaySec={{ item.timer.randomizeddelaysec }}
+{% endif %}
 
 [Install]
 WantedBy=timers.target
