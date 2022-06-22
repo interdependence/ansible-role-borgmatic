@@ -49,4 +49,3 @@
     label: '{{ item.path }}'
   when: item.state | default('present') == 'absent'
   loop: '{{ borgmatic_configs }}'
-
