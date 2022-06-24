@@ -57,6 +57,7 @@
     scope: '{{ borgmatic_systemd_scope }}'
     state: '{{ "started" if item.state | default("present") == "present" and item.timer.oncalendar is defined else "stopped" }}'
     enabled: '{{ true if item.state | default("present") == "present" and item.timer.oncalendar is defined else false }}'
+    daemon_reload: true
   vars:
     timer_file: '{{ borgmatic_systemd_path }}/{{ item.name.rstrip(".service") }}.timer'
   become_user: '{{ borgmatic_user_facts.name }}'
